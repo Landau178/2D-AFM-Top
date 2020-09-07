@@ -38,7 +38,18 @@ class Simulation_TB():
         """
         Just for testing
         """
-        config = {"a": 1, "b": 2}
+        a1 = np.array([1, 0, 0])
+        a2 = np.array([-1/2, sq3/2, 0])
+        a3 = np.array([0, 0, 2/3])
+        # l1 = tbu.vector_SU2(0.5 * a1)
+        # l2 = tbu.vector_SU2(0.5 * a1 + 0.5 * a2)
+        # l3 = tbu.vector_SU2(0.5 * a2)
+        lat = [list(a1), list(a2), list(a3)]
+        orb = [[1/3, 1/6, 0],  # spin up
+               [5/6, 1/6, 0],  # spin down
+               [1/3, 2/3, 0],  # spin down
+               [5/6, 2/3, 0]]  # spin up
+        config = {"lat": lat, "orb": orb}
         with open(self.path / 'config.json', 'w') as fp:
             json.dump(config, fp)
 
