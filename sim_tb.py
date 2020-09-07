@@ -63,6 +63,10 @@ class Simulation_TB():
         with open(self.path / 'config.json', 'r') as fp:
             config = json.load(fp)
         print(config)
+        self.dim_k = config["dim_k"]
+        self.dim_r = config["dim_r"]
+        self.lat = config["lat"]
+        self.orb = config["orb"]
 
 
 if __name__ == "__main__":
