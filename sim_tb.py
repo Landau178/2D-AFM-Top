@@ -36,7 +36,7 @@ class Simulation_TB():
 
     def save_config(self):
         config = {"a": 1, "b": 2}
-        with open('data.json', 'w') as fp:
+        with open(self.path / 'config.json', 'w') as fp:
             json.dump(config, fp)
 
     def read_config_file(self):
