@@ -52,7 +52,7 @@ class Simulation_TB():
                [5/6, 1/6, 0],  # spin down
                [1/3, 2/3, 0],  # spin down
                [5/6, 2/3, 0]]  # spin up
-        config = {"dim_nk": 2, "dim_r": 3, "lat": lat, "orb": orb}
+        config = {"dim_k": 2, "dim_r": 3, "lat": lat, "orb": orb}
         with open(self.path / 'config.json', 'w') as fp:
             json.dump(config, fp)
 
