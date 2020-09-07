@@ -65,6 +65,13 @@ class Simulation_TB():
         self.lat = config["lat"]
         self.orb = config["orb"]
 
+    def read_hoppings(self):
+        """
+        Read the hoppings of path/hoppings.dat,
+        and load them into the model.
+        """
+        path_to_hops = self.path / "hoppings.dat"
+
 
 if __name__ == "__main__":
     path = pathlib.Path("tests/")
