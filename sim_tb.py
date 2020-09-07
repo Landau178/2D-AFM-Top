@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pythtb as pytb
 
+
 class Simulation_TB():
     """
     This class perform calculations of tight-binding models,
@@ -13,7 +14,14 @@ class Simulation_TB():
     config.json
     -----------
         dim_k: (int)
-        dim_r: (dim_r)
+            Dimensionality of reciprocal space.
+        dim_r: (int)
+            Dimensionality of real space
+        lat: (list)
+            array containing lattice vectors
+        orb: (list)
+            Array containing reduced coordinates of all
+            tight-binding orbitals.
 
 
     """
