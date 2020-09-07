@@ -1,9 +1,9 @@
 
-import numpy as np
-import matplotlib.pyplot as plt
 import json
 import matplotlib.pyplot as plt
 import numpy as np
+import pathlib
+
 import pythtb as pytb
 
 
