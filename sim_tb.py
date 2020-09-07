@@ -30,4 +30,24 @@ class Simulation_TB():
     """
 
     def __init__(self, path):
-        self.dir = path
+        self.path = pathlib.Path(path).absolute()
+        self.save_config()
+        self.read_config_file()
+
+    def save_config(self):
+        config = {"a": 1, "b": 2}
+        with open('data.json', 'w') as fp:
+            json.dump(config, fp)
+
+    def read_config_file(self):
+        """
+        Read the config file and set the corresponding atributes.
+        """
+        with open(self.path / 'config.json', 'r') as fp:
+            config = json.load(fp)
+        print(config)
+
+
+if __name__ == "__main__":
+    path = pathlib.Path("tests/")
+    Sim = Simulation_TB(path)
