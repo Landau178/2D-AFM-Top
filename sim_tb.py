@@ -33,6 +33,8 @@ class Simulation_TB():
         self.path = pathlib.Path(path).absolute()
         self.save_config()
         self.read_config_file()
+        self.model = pytb.tb_model(self.dim_k, self.dim_r,
+                                   lat=self.lat, orb=self.orb, nspin=2)
 
     def save_config(self):
         """
@@ -51,7 +53,7 @@ class Simulation_TB():
                [5/6, 2/3, 0]]  # spin up
         config = {"dim_k": 2, "dim_r": 3, "lat": lat, "orb": orb}
         with open(self.path / 'config.json', 'w') as fp:
-            json.dump(config, fp)
+            json.dump(config, fp, sort_keys=True, indent=4)
 
     def read_config_file(self):
         """
