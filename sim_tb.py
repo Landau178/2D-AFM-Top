@@ -39,7 +39,7 @@ class Simulation_TB():
         Just for testing
         """
         a1 = np.array([1, 0, 0])
-        a2 = np.array([-1/2, sq3/2, 0])
+        a2 = np.array([-1/2, np.sqrt(3)/2, 0])
         a3 = np.array([0, 0, 2/3])
         # l1 = tbu.vector_SU2(0.5 * a1)
         # l2 = tbu.vector_SU2(0.5 * a1 + 0.5 * a2)
