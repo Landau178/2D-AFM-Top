@@ -1,4 +1,7 @@
 
+import numpy as np
+import matplotlib.pyplot as plt
+import pythtb as pytb
 
 class Simulation_TB():
     """
