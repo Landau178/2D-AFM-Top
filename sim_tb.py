@@ -38,9 +38,6 @@ class Simulation_TB():
         """
         Just for testing
         """
-        # a1 = np.array([1, 0, 0])
-        # a2 = np.array([-1/2, np.sqrt(3)/2, 0])
-        # a3 = np.array([0, 0, 2/3])
         a1 = [1, 0, 0]
         a2 = [-1/2, np.sqrt(3)/2, 0]
         a3 = [0, 0, 2/3]
