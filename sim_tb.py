@@ -61,7 +61,7 @@ class Simulation_TB():
         """
         with open(self.path / 'config.json', 'r') as fp:
             config = json.load(fp)
-        print(config)
+        # print(config)
         self.dim_k = config["dim_k"]
         self.dim_r = config["dim_r"]
         self.lat = config["lat"]
@@ -71,8 +71,132 @@ class Simulation_TB():
         """
         Read the hoppings of path/hoppings.dat,
         and load them into the model.
+        More info in: self.__add_hopping_from_line
         """
         path_to_hops = self.path / "hoppings.dat"
+        with open(path_to_hops, 'r') as reader:
+            for line in reader:
+                if line[0] == "#":
+                    continue
+                self.__add_hopping_from_line(line)
+
+
+# -----------------------------------------------------------------------------
+# Private methods for reading hopping file.
+# -----------------------------------------------------------------------------
+
+
+    def __add_hopping_from_line(self, line, mode="set"):
+        """
+        Recieves a line of the hopping text file and set the corresponding
+        hopping amplitude (or onsite energy) in the tight-binding model.
+        More info about the format of "line" in
+        self.__extract_hopping_from_line .
+
+        Parameters:
+        -----------
+            line: (str)
+                String containing hopping(onsite) amplitdes.
+            mode: (str)
+                Mode to include the hopping in the model.
+                Can be "set", "add" or "reset".
+        Returns:
+        --------
+            None
+        """
+        hop, is_onsite = self.__extract_hopping_from_line(line)
+        if is_onsite:
+            i, h = hop
+            self.model.set_onsite(h, ind_i=i, mode=mode)
+        else:
+            n1, n2, i, j, h = hop
+            self.model.set_hop(h, i, j, ind_R=[n1, n2, 0], mode=mode)
+
+    def __extract_hopping_from_line(self, line):
+        """
+        Recieves a line of the hopping text file and returns the parameters
+        that characterizes the hopping/onsite term.
+
+        Input:
+        ------
+            line: (str)
+                Line can be ingresed in one of the following
+                formats:
+                    1. "n1 n2 i j hr hi"
+                    2. "n1 n2 i j s0r s0i sxr sxi syr syi szr szi"
+                In format 1. the hopping amplitude (or onsite term) is:
+                    h = hr + 1j * hi
+                In format 2, the hopping is expressed in a spin resolved basis,
+                beeing  "s*r" and "s*i" the real and imaginary parts of the
+                coefficients accompaining the pauli matrices s0, sx, sy, sz.
+
+        Returns:
+            hop: (tuple)
+                If is_onsite is True, it contains the parameters:
+                (i, h). Else, the it will contain (n1, n2, i, j, h).
+                With i being the orbital index, and h the hopping
+                or onsite energy. h can be a complex scalar,
+                or a complex array [s0, sx, sy, sz], depending on
+                the format of "line".
+            is_onsite: (Bool)
+                Flag, to determine if the term enconded in line is an
+                onsite energy.
+        """
+        line = self.__reformat_line(line).split(" ")
+        if len(line) == 6:
+            spin_resolved = False
+        elif len(line) == 12:
+            spin_resolved = True
+        else:
+            mssg = "Each line of hoppings file must have"
+            mssg += " 6 or 12 quantities separated by white spaces."
+            mssg += "\nThis line have {} quantities.".format(len(line))
+            raise Exception(mssg)
+        n1, n2 = int(line[0]), int(line[1])
+        i, j = int(line[2]), int(line[3])
+        h = float(line[4]) + 1j * float(line[5])
+        if spin_resolved:
+            sx = float(line[6]) + 1j * float(line[7])
+            sy = float(line[8]) + 1j * float(line[9])
+            sz = float(line[10]) + 1j * float(line[11])
+            h = [h, sx, sy, sz]
+        is_onsite = n1 == 0 and n2 == 0
+        is_onsite = is_onsite and i == j
+        if is_onsite:
+            hop = (i, h)
+        else:
+            hop = (n1, n2, i, j, h)
+        return hop, is_onsite
+
+    def __reformat_line(self, line):
+        """
+        Recieves a line of the hopings text file,
+        replaces double spaces (and up to 6 consecutives spaces),
+        by single white space, and removes any final whitespace,
+        as the endline character
+        Parameters:
+        -----------
+            line: (str)
+                String with parameter separated by white
+                spaces.
+        Returns:
+            formated_line: (str)
+                new line, after the formating procedure.
+        """
+        if line[-1] == "\n":
+            formated_line = line[0:-1]
+        else:
+            formated_line = line
+
+        for i in range(3):
+            formated_line = formated_line.replace("  ", " ")
+
+        while formated_line[-1] == " ":
+            formated_line = formated_line[0:-1]
+        while formated_line[0] == " ":
+            formated_line = formated_line[1::]
+        print(formated_line)
+        return formated_line
 
 
 if __name__ == "__main__":
