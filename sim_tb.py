@@ -194,7 +194,6 @@ class Simulation_TB():
             formated_line = formated_line[0:-1]
         while formated_line[0] == " ":
             formated_line = formated_line[1::]
-        print(formated_line)
         return formated_line
 
 
