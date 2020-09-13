@@ -35,6 +35,7 @@ class Simulation_TB():
         self.read_config_file()
         self.model = pytb.tb_model(self.dim_k, self.dim_r,
                                    lat=self.lat, orb=self.orb, nspin=2)
+        self.read_hoppings()
 
     def save_config(self):
         """
