@@ -25,8 +25,6 @@ class Simulation_TB():
         orb: (list)
             Array containing reduced coordinates of all
             tight-binding orbitals.
-
-
     """
 
     def __init__(self, path):
