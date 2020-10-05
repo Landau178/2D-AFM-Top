@@ -187,7 +187,7 @@ class Simulation_TB():
         else:
             formated_line = line
 
-        for i in range(3):
+        for _ in range(3):
             formated_line = formated_line.replace("  ", " ")
 
         while formated_line[-1] == " ":
