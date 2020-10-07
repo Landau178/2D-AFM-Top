@@ -71,13 +71,22 @@ class Simulation_TB():
         Read the hoppings of path/hoppings.dat,
         and load them into the model.
         More info in: self.__add_hopping_from_line
+
+        Parameters:
+        -----------
+            name: (str, default is "hoppings.dat")
+                name of the hopping file.
+            mode: (str, default is "set)
+                Mode to add hopping.
+                See __add_hopping_from_line
+
         """
         path_to_hops = self.path / name
         with open(path_to_hops, 'r') as reader:
             for line in reader:
                 if line[0] == "#":
                     continue
-                self.__add_hopping_from_line(line)
+                self.__add_hopping_from_line(line, mode=mode)
 
 
 # -----------------------------------------------------------------------------
