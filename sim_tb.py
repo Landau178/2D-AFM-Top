@@ -255,7 +255,7 @@ def create_hoppings_toy_model(path, t, lamb, h):
         [-1, 0, 2, 3, t, 0, 0, -l1[0]*beta, 0, -l1[1]*beta, 0, -alpha],
         [0, 0, 2, 3, t, 0, 0, l1[0]*beta, 0, l1[1]*beta, 0, alpha]
     ]
-    hopps = [*hopps_from0, *hopps_from1, *hopps_from2]
+    hopps = [*onsite, *hopps_from0, *hopps_from1, *hopps_from2]
 
     name = path / "hoppings_toy_model.dat"
     with open(name, 'w') as writer:
