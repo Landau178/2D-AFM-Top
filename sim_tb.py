@@ -197,6 +197,69 @@ class Simulation_TB():
         return formated_line
 
 
+def list_to_str(foo_list):
+    """
+    Takes a list, and transform it to a string,
+    with elements separated by spaces.
+    Parameters:
+    -----------
+        foo_list: (list)
+            List with any content.
+            Elements must be convertible to str.
+    Returns:
+        line: (str)
+            if list is [1, 2, 3], then line is:
+            "1 2 3 "
+    """
+    n = len(foo_list)
+    line = ""
+    for i in range(n):
+        line += str(foo_list[i]) + " "
+    return line
+
+
+def create_hoppings_toy_model(path, t, lamb, h):
+    """
+    Create a text file with the hoppings of the toy model
+    of CrAs2.
+    Remember to include h !
+    """
+    a1 = np.array([1, 0, 0])
+    a2 = np.array([-0.5, np.sqrt(3)/2, 0])
+    l1 = 0.5 * a1
+    l2 = 0.5 * (a1 + a2)
+    l3 = 0.5 * a2
+    alpha = np.sqrt(3)/24 * lamb
+    beta = lamb / 36
+    hopps_from0 = [
+        [0, 0, 0, 1, t, 0, 0, l1[0]*beta, 0, l1[1]*beta, 0, alpha],
+        [0, 0, 0, 2, t, 0, 0, l3[0]*beta, 0, l3[1]*beta, 0, alpha],
+        [0, 0, 0, 3, t, 0, 0, l2[0]*beta, 0, l2[1]*beta, 0, -alpha],
+        [-1, 0, 0, 1, t, 0, 0, -l1[0]*beta, 0, -l1[1]*beta, 0, -alpha],
+        [-1, -1, 0, 3, t, 0, 0, -l2[0]*beta, 0, -l2[1]*beta, 0, alpha],
+        [0, -1, 0, 2, t, 0, 0, -l3[0]*beta, 0, -l3[1]*beta, 0, -alpha],
+    ]
+    hopps_from1 = [
+        [0, 0, 1, 3, t, 0, 0, l3[0]*beta, 0, l3[1]*beta, 0, alpha],
+        [1, 0, 1, 2, t, 0, 0, l2[0]*beta, 0, l2[1]*beta, 0, -alpha],
+        [0, -1, 1, 3, t, 0, 0, -l3[0]*beta, 0, -l3[1]*beta, 0, -alpha],
+        [0, -1, 1, 2, t, 0, 0, -l2[0]*beta, 0, -l2[1]*beta, 0, alpha]
+    ]
+    hopps_from2 = [
+        [-1, 0, 2, 3, t, 0, 0, -l1[0]*beta, 0, -l1[1]*beta, 0, -alpha],
+        [0, 0, 2, 3, t, 0, 0, l1[0]*beta, 0, l1[1]*beta, 0, alpha]
+    ]
+    hopps = [*hopps_from0, *hopps_from1, *hopps_from2]
+
+    name = path / "hoppings_toy_model.dat"
+    with open(name, 'w') as writer:
+        writer.write("# n1 n2 i j s0r s0i sxr sxi syr syi szr szi")
+        for hop in hopps:
+            line = list_to_str(hop)
+            writer.write(line + "\n")
+
+
 if __name__ == "__main__":
     path = pathlib.Path("tests/")
-    Sim = Simulation_TB(path)
+    create_hoppings_toy_model(path, 1, 1, 0)
+    #Sim = Simulation_TB(path)
