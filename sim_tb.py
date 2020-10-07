@@ -66,13 +66,13 @@ class Simulation_TB():
         self.lat = config["lat"]
         self.orb = config["orb"]
 
-    def read_hoppings(self):
+    def read_hoppings(self, name="hoppings.dat"):
         """
         Read the hoppings of path/hoppings.dat,
         and load them into the model.
         More info in: self.__add_hopping_from_line
         """
-        path_to_hops = self.path / "hoppings.dat"
+        path_to_hops = self.path / name
         with open(path_to_hops, 'r') as reader:
             for line in reader:
                 if line[0] == "#":
