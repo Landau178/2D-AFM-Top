@@ -259,6 +259,7 @@ def create_hoppings_toy_model(path, t, lamb, h):
 
     name = path / "hoppings_toy_model.dat"
     with open(name, 'w') as writer:
+        writer.write("# Each line is a hopping, with format:")
         writer.write("# n1 n2 i j s0r s0i sxr sxi syr syi szr szi")
         for hop in hopps:
             line = list_to_str(hop)
