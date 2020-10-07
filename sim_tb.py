@@ -33,7 +33,7 @@ class Simulation_TB():
         self.read_config_file()
         self.model = pytb.tb_model(self.dim_k, self.dim_r,
                                    lat=self.lat, orb=self.orb, nspin=2)
-        self.read_hoppings()
+        self.read_hoppings(name="hoppings_toy_model.dat")
 
     def save_config(self):
         """
@@ -42,9 +42,6 @@ class Simulation_TB():
         a1 = [1, 0, 0]
         a2 = [-1/2, np.sqrt(3)/2, 0]
         a3 = [0, 0, 2/3]
-        # l1 = tbu.vector_SU2(0.5 * a1)
-        # l2 = tbu.vector_SU2(0.5 * a1 + 0.5 * a2)
-        # l3 = tbu.vector_SU2(0.5 * a2)
         lat = [a1, a2, a3]
         orb = [[1/3, 1/6, 0],  # spin up
                [5/6, 1/6, 0],  # spin down
