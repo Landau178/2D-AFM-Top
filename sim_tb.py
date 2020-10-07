@@ -231,6 +231,12 @@ def create_hoppings_toy_model(path, t, lamb, h):
     l3 = 0.5 * a2
     alpha = np.sqrt(3)/24 * lamb
     beta = lamb / 36
+    onsite = [
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, h, 0],
+        [0, 0, 1, 1, 0, 0, 0, 0, 0, 0, -h, 0],
+        [0, 0, 2, 2, 0, 0, 0, 0, 0, 0, -h, 0],
+        [0, 0, 3, 3, 0, 0, 0, 0, 0, 0, h, 0]
+    ]
     hopps_from0 = [
         [0, 0, 0, 1, t, 0, 0, l1[0]*beta, 0, l1[1]*beta, 0, alpha],
         [0, 0, 0, 2, t, 0, 0, l3[0]*beta, 0, l3[1]*beta, 0, alpha],
