@@ -66,7 +66,7 @@ class Simulation_TB():
         self.lat = config["lat"]
         self.orb = config["orb"]
 
-    def read_hoppings(self, name="hoppings.dat"):
+    def read_hoppings(self, name="hoppings.dat", mode="set"):
         """
         Read the hoppings of path/hoppings.dat,
         and load them into the model.
@@ -77,7 +77,7 @@ class Simulation_TB():
             name: (str, default is "hoppings.dat")
                 name of the hopping file.
             mode: (str, default is "set)
-                Mode to add hopping.
+                Mode to include hopping.
                 See __add_hopping_from_line
 
         """
