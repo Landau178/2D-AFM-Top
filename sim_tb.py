@@ -268,8 +268,8 @@ def create_hoppings_toy_model(path, t, lamb, h):
 
     name = path / "hoppings_toy_model.dat"
     with open(name, 'w') as writer:
-        writer.write("# Each line is a hopping, with format:")
-        writer.write("# n1 n2 i j s0r s0i sxr sxi syr syi szr szi")
+        writer.write("# Each line is a hopping, with format:\n")
+        writer.write("# n1 n2 i j s0r s0i sxr sxi syr syi szr szi\n")
         for hop in hopps:
             line = list_to_str(hop)
             writer.write(line + "\n")
@@ -277,5 +277,5 @@ def create_hoppings_toy_model(path, t, lamb, h):
 
 if __name__ == "__main__":
     path = pathlib.Path("tests/")
-    create_hoppings_toy_model(path, 1, 1, 0)
+    create_hoppings_toy_model(path, 1, 1, 1)
     #Sim = Simulation_TB(path)
