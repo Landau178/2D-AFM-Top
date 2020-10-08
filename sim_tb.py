@@ -47,7 +47,9 @@ class Simulation_TB():
                [5/6, 1/6, 0],  # spin down
                [1/3, 2/3, 0],  # spin down
                [5/6, 2/3, 0]]  # spin up
-        config = {"dim_k": 2, "dim_r": 3, "lat": lat, "orb": orb}
+        k_spoints = [[0, 0], [1/3, 1/3], [0, 1/2], [-1/3, 2/3], [0, 0]]
+        config = {"dim_k": 2, "dim_r": 3, "lat": lat,
+                  "orb": orb, "k_spoints": k_spoints}
         with open(self.path / 'config.json', 'w') as fp:
             json.dump(config, fp, sort_keys=True, indent=4)
 
@@ -62,6 +64,7 @@ class Simulation_TB():
         self.dim_r = config["dim_r"]
         self.lat = config["lat"]
         self.orb = config["orb"]
+        self.k_spoints = config["k_spoints"]
 
     def read_hoppings(self, name="hoppings.dat", mode="set"):
         """
@@ -85,11 +88,18 @@ class Simulation_TB():
                     continue
                 self.__add_hopping_from_line(line, mode=mode)
 
+    def plot_bands(self, ax):
+        pass
+        path = self.k_spoints
+        (k_vec, k_dist, k_node) = self.model.k_path(path, 100, report=False)
+        # solve for eigenvalues on that path
+        evals = self.model.solve_all(k_vec)
+        for i in range(len(self.orb)):
+            ax.plot(k_dist, evals[i, :], color="green")
 
 # -----------------------------------------------------------------------------
 # Private methods for reading hopping file.
 # -----------------------------------------------------------------------------
-
 
     def __add_hopping_from_line(self, line, mode="set"):
         """
