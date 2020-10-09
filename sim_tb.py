@@ -89,7 +89,17 @@ class Simulation_TB():
                 self.__add_hopping_from_line(line, mode=mode)
 
     def plot_bands(self, ax):
-        pass
+        """
+        Plot the bands in the given path of BZ.
+
+        Parameters:
+        -----------
+            ax: (matplotlib.axes.Axes)
+                Axes for plot.
+        Returns:
+        -------
+            None
+        """
         path = self.k_spoints
         (k_vec, k_dist, k_node) = self.model.k_path(path, 100, report=False)
         # solve for eigenvalues on that path
