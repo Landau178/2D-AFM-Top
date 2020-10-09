@@ -48,8 +48,9 @@ class Simulation_TB():
                [1/3, 2/3, 0],  # spin down
                [5/6, 2/3, 0]]  # spin up
         k_spoints = [[0, 0], [1/3, 1/3], [0, 1/2], [-1/3, 2/3], [0, 0]]
+        k_sp_labels = ["$\\Gamma$", "$K$", "$M$", "$K'$", "$\\Gamma$"]
         config = {"dim_k": 2, "dim_r": 3, "lat": lat,
-                  "orb": orb, "k_spoints": k_spoints}
+                  "orb": orb, "k_spoints": k_spoints, "k_sp_labels": k_sp_labels}
         with open(self.path / 'config.json', 'w') as fp:
             json.dump(config, fp, sort_keys=True, indent=4)
 
@@ -65,6 +66,7 @@ class Simulation_TB():
         self.lat = config["lat"]
         self.orb = config["orb"]
         self.k_spoints = config["k_spoints"]
+        self.k_sp_labels = config["k_sp_labels"]
 
     def read_hoppings(self, name="hoppings.dat", mode="set"):
         """
