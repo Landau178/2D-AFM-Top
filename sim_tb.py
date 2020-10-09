@@ -3,6 +3,7 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import interpolate
+from scipy import linalg as la
 import pathlib
 
 import pythtb as pytb
