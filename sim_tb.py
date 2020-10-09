@@ -116,9 +116,10 @@ class Simulation_TB():
             None
         """
         path = self.k_spoints
-        (k_vec, k_dist, k_node) = self.model.k_path(path, 100, report=False)
+        (k_vec, k_dist, k_node) = self.model.k_path(path, 1000, report=False)
         # solve for eigenvalues on that path
         evals = self.model.solve_all(k_vec)
+        print(k_node)
         for i in range(len(self.orb)):
             ax.plot(k_dist, evals[i, :], color="green")
 
