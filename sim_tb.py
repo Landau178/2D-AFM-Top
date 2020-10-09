@@ -71,6 +71,9 @@ class Simulation_TB():
         self.k_sp_labels = config["k_sp_labels"]
 
     def set_recip_lat(self):
+        """
+        Set reciprocal vectors. Only valid for r_dim=3.
+        """
         a1 = self.lat[0]
         a2 = self.lat[1]
         a3 = self.lat[2]
