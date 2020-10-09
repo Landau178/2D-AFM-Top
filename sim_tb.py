@@ -2,6 +2,7 @@
 import json
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy import interpolate
 import pathlib
 
 import pythtb as pytb
