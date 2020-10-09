@@ -69,6 +69,17 @@ class Simulation_TB():
         self.k_spoints = config["k_spoints"]
         self.k_sp_labels = config["k_sp_labels"]
 
+    def set_recip_lat(self):
+        a1 = self.lat[0]
+        a2 = self.lat[1]
+        a3 = self.lat[2]
+        vol = a1 @ (np.cross(a2, a3))
+        factor = 2 * np.pi / vol
+        b1 = factor * np.cross(a2, a3)
+        b2 = factor * np.cross(a3, a1)
+        b3 = factor * np.cross(a1, a2)
+        self.rlat = np.array([b1, b2, b3])
+
     def read_hoppings(self, name="hoppings.dat", mode="set"):
         """
         Read the hoppings of path/hoppings.dat,
