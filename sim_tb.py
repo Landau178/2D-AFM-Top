@@ -64,7 +64,8 @@ class Simulation_TB():
         # print(config)
         self.dim_k = config["dim_k"]
         self.dim_r = config["dim_r"]
-        self.lat = config["lat"]
+        self.lat = np.array(config["lat"])
+        self.set_recip_lat()
         self.orb = config["orb"]
         self.k_spoints = config["k_spoints"]
         self.k_sp_labels = config["k_sp_labels"]
