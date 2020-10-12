@@ -172,6 +172,9 @@ class Simulation_TB():
             k_vec = ks_red[0] * self.rlat[0] + ks_red[1] * self.rlat[1]
             ax.plot(k_vec[0], k_vec[1], marker="o", markersize=5, color="red")
 
+        if ax is None:
+            return fig, ax
+
     def create_bands_grid(self, nk=50, delta_k=0.9*2*np.pi):
         """
         """
