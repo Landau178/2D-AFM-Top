@@ -10,6 +10,7 @@ import pythtb as pytb
 
 import bz_utilities as bzu
 
+
 class Simulation_TB():
     """
     This class perform calculations of tight-binding models,
@@ -35,7 +36,7 @@ class Simulation_TB():
         self.save_config()
         self.read_config_file()
         self.model = pytb.tb_model(self.dim_k, self.dim_r,
-                                   lat=self.lat, orb=self.orb, nspin=2)
+                                   lat=self.lat, orb=self.orb, nspin=self.nspin)
         self.read_hoppings(name="hoppings_toy_model.dat")
 
     def save_config(self):
@@ -50,10 +51,12 @@ class Simulation_TB():
                [5/6, 1/6, 0],  # spin down
                [1/3, 2/3, 0],  # spin down
                [5/6, 2/3, 0]]  # spin up
+        nspin = 2
         k_spoints = [[0, 0], [1/3, 1/3], [0, 1/2], [-1/3, 2/3], [0, 0]]
         k_sp_labels = ["$\\Gamma$", "$K$", "$M$", "$K'$", "$\\Gamma$"]
         config = {"dim_k": 2, "dim_r": 3, "lat": lat,
-                  "orb": orb, "k_spoints": k_spoints, "k_sp_labels": k_sp_labels}
+                  "orb": orb, "nspin": nspin, "k_spoints": k_spoints,
+                  "k_sp_labels": k_sp_labels}
         with open(self.path / 'config.json', 'w') as fp:
             json.dump(config, fp, sort_keys=True, indent=4)
 
@@ -124,11 +127,65 @@ class Simulation_TB():
         """
         path = self.k_spoints
         (k_vec, k_dist, k_node) = self.model.k_path(path, 1000, report=False)
-        # solve for eigenvalues on that path
         evals = self.model.solve_all(k_vec)
         print(k_node)
         for i in range(len(self.orb)):
             ax.plot(k_dist, evals[i, :], color="green")
+
+        ax.set_xticks(k_node)
+        ax.set_xticklabels(self.k_sp_labels, fontsize=15)
+        ax.set_xlim([k_node[0], k_node[-1]])
+        for node in range(1, len(k_node)-1):
+            ax.axvline(x=k_node[node], color="black", ls="--", lw=0.5)
+
+    def plot_bands_2d(self, j, ax=None, nk=100, bands=None, delta_k=0.8*2*np.pi):
+        """
+        Olny valid for k_dim = 2.
+        Parameters:
+        -----------
+            j: (int)
+                Index of band.
+            nk: (int, default is 10)
+                Size of the k-grid.
+            bands: (np.ndarray, shape (nbands,nk,nk))
+                Bands to plot, if None, grid is calculated.
+        Returns:
+        --------
+            None
+        """
+        if bands is None:
+            self.create_bands_grid(nk=nk, delta_k=delta_k)
+        if ax is None:
+            fig, ax = plt.subplots()
+
+        extent = (-delta_k, delta_k, -delta_k, delta_k)
+        ax.imshow(self.bands_grid[j, :, :], origin="lower", extent=extent)
+
+        for i in range(1, len(self.k_spoints)):
+            kf_red = self.k_spoints[i]
+            k0_red = self.k_spoints[i-1]
+            kf = kf_red[0] * self.rlat[0] + kf_red[1] * self.rlat[1]
+            k0 = k0_red[0] * self.rlat[0] + k0_red[1] * self.rlat[1]
+            ax.plot([k0[0], kf[0]], [k0[1], kf[1]], ls="--", color="white")
+
+        for ks_red in self.k_spoints:
+            k_vec = ks_red[0] * self.rlat[0] + ks_red[1] * self.rlat[1]
+            ax.plot(k_vec[0], k_vec[1], marker="o", markersize=5, color="red")
+
+    def create_bands_grid(self, nk=50, delta_k=0.9*2*np.pi):
+        """
+        """
+        k = np.linspace(-delta_k, delta_k, nk)
+        kx, ky = np.meshgrid(k, k)
+        M = bzu.cartesian_to_reduced_k_matrix(self.rlat[0], self.rlat[1])
+        bands = np.zeros((self.nband, nk, nk))
+
+        for i1 in range(nk):
+            for i2 in range(nk):
+                k_vec = np.array([kx[i1, i2], ky[i1, i2]])
+                k_red = M @ k_vec
+                bands[:, i1, i2] = self.model.solve_one(k_red)
+        self.bands_grid = bands
 
 # -----------------------------------------------------------------------------
 # Private methods for reading hopping file.
@@ -317,5 +374,11 @@ def create_hoppings_toy_model(path, t, lamb, h):
 
 if __name__ == "__main__":
     path = pathlib.Path("tests/")
-    create_hoppings_toy_model(path, 1, 1, 1)
-    #Sim = Simulation_TB(path)
+    create_hoppings_toy_model(path, 1, 0.0, 0.1)
+    Sim = Simulation_TB(path)
+    fig, ax = plt.subplots(1, 2)
+    Sim.plot_bands(ax[0])
+    Sim.plot_bands_2d(0, ax=ax[1])
+    # plt.colorbar()
+
+    plt.show()
