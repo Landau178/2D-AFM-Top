@@ -350,7 +350,7 @@ def create_hoppings_toy_model(path, t, lamb, h):
     """
     Create a text file with the hoppings of the toy model
     of CrAs2.
-    Remember to include h !
+
     """
     a1 = np.array([1, 0, 0])
     a2 = np.array([-0.5, np.sqrt(3)/2, 0])
