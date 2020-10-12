@@ -175,8 +175,19 @@ class Simulation_TB():
         if ax is None:
             return fig, ax
 
-    def create_bands_grid(self, nk=50, delta_k=0.9*2*np.pi):
+    def create_bands_grid(self, nk=50, delta_k=1.6*np.pi):
         """
+        Create a gir d of the eigernvalues in cartesian coordinates of the
+        k-space. Save the energies in atribute self.bands_grid.
+        Parameters:
+        ----------
+            nk: (int, defalt is 50)
+                Size of k_grid.
+            delta_k: (float, fedault is 1.6*np.pi)
+                Extent of grid is [-delta_k, delta_k] in kx and ky.
+        Returns:
+        --------
+            None
         """
         k = np.linspace(-delta_k, delta_k, nk)
         kx, ky = np.meshgrid(k, k)
