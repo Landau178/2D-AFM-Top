@@ -209,6 +209,43 @@ class Simulation_TB():
                 bands[:, i1, i2] = self.model.solve_one(k_red)
         self.bands_grid = bands
 
+    def berry_flux(self, bands, nk=100):
+        """
+        Parameters:
+        -----------
+            bands: (list of ints)
+                List containing the indices of the occupied bands.
+            nk: (int, default is 100)
+                Size of the sample in reciprocal space.
+
+        Returns:
+        --------
+            plaq: (np.ndarray of shape (nk,nk))
+                Array containing the Berry phases on individual plaquettes
+                on BZ-grid.
+
+        """
+        w_BZ = pytb.wf_array(self.model, [nk, nk])
+        w_BZ.solve_on_grid([0, 0])
+        plaq = w_BZ.berry_flux(bands, individual_phases=True)
+        return plaq
+
+    def plot_berry_flux(self, berry_fluxes, kpts, ):
+        """
+        Parameters:
+        -----------
+            berry_fluxes: (np.ndarray)
+                2D array containing berry curvatureon 1BZ.
+            ax: (matplotlib.axes.Axes)
+                Axes to plot.
+        """
+
+        ax.imshow(plaq.T, origin="lower")
+
+        ax.set_title("Berry curvature on 1BZ")
+        ax.set_xlabel(r"$k_1$")
+        ax.set_ylabel(r"$k_2$")
+
 # -----------------------------------------------------------------------------
 # Private methods for reading hopping file.
 # -----------------------------------------------------------------------------
