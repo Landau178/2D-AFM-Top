@@ -32,7 +32,7 @@ class Simulation_TB():
         nspin: int
             2 if spin degree of freedom is not counted in orb.
             1 if it is.
-        k_spoints: (list of floats) 
+        k_spoints: (list of floats)
             k special points in reduced coordinates.
         k_sp_labels: (list of str)
             Labels for the k special points.
@@ -230,7 +230,7 @@ class Simulation_TB():
         plaq = w_BZ.berry_flux(bands, individual_phases=True)
         return plaq
 
-    def plot_berry_flux(self, berry_fluxes, kpts, ):
+    def plot_berry_flux(self, berry_fluxes, ax):
         """
         Parameters:
         -----------
@@ -240,7 +240,7 @@ class Simulation_TB():
                 Axes to plot.
         """
 
-        ax.imshow(plaq.T, origin="lower")
+        ax.imshow(berry_fluxes.T, origin="lower")
 
         ax.set_title("Berry curvature on 1BZ")
         ax.set_xlabel(r"$k_1$")
@@ -435,9 +435,10 @@ if __name__ == "__main__":
     path = pathlib.Path("tests/")
     create_hoppings_toy_model(path, 1, 0.0, 0.1)
     Sim = Simulation_TB(path)
-    fig, ax = plt.subplots(1, 2)
-    Sim.plot_bands(ax[0])
-    Sim.plot_bands_2d(0, ax=ax[1])
-    # plt.colorbar()
+    Sim.model.display()
+    # fig, ax = plt.subplots(1, 2)
+    # Sim.plot_bands(ax[0])
+    # Sim.plot_bands_2d(0, ax=ax[1])
+    # # plt.colorbar()
 
     plt.show()
