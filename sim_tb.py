@@ -230,18 +230,20 @@ class Simulation_TB():
         plaq = w_BZ.berry_flux(bands, individual_phases=True)
         return plaq
 
-    def plot_berry_flux(self, berry_fluxes, ax):
+    def plot_berry_flux(self, berry_fluxes, fig, ax):
         """
         Parameters:
         -----------
             berry_fluxes: (np.ndarray)
                 2D array containing berry curvatureon 1BZ.
+            fig: (matplotlib.figure.Figure)
+                Fig of plot.
             ax: (matplotlib.axes.Axes)
                 Axes to plot.
         """
 
-        ax.imshow(berry_fluxes.T, origin="lower")
-
+        img = ax.imshow(berry_fluxes.T, origin="lower")
+        ax.colorbar(img)
         ax.set_title("Berry curvature on 1BZ")
         ax.set_xlabel(r"$k_1$")
         ax.set_ylabel(r"$k_2$")
