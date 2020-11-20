@@ -249,7 +249,7 @@ class Simulation_TB():
         """
 
         img = ax.imshow(berry_fluxes.T, origin="lower")
-        ax.colorbar(img)
+        fig.colorbar(img)
         ax.set_title("Berry curvature on 1BZ")
         ax.set_xlabel(r"$k_1$")
         ax.set_ylabel(r"$k_2$")
