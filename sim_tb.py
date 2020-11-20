@@ -146,13 +146,17 @@ class Simulation_TB():
         for node in range(1, len(k_node)-1):
             ax.axvline(x=k_node[node], color="black", ls="--", lw=0.5)
 
-    def plot_bands_2d(self, j, ax=None, nk=100, bands=None, delta_k=0.8*2*np.pi):
+    def plot_bands_2d(self, j, fig=None, ax=None, nk=100, bands=None, delta_k=0.8*2*np.pi):
         """
         Olny valid for k_dim = 2.
         Parameters:
         -----------
             j: (int)
                 Index of band.
+            fig: (matplotlib.figure.Figure)
+                Figure to plot.
+            ax: (matplotlib.axes.Axes)
+                Axes to plot.
             nk: (int, default is 10)
                 Size of the k-grid.
             bands: (np.ndarray, shape (nbands,nk,nk))
