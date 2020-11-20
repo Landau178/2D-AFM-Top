@@ -167,11 +167,13 @@ class Simulation_TB():
         """
         if bands is None:
             self.create_bands_grid(nk=nk, delta_k=delta_k)
-        if ax is None:
+        if (ax is None) or (fig is None):
             fig, ax = plt.subplots()
 
         extent = (-delta_k, delta_k, -delta_k, delta_k)
-        ax.imshow(self.bands_grid[j, :, :], origin="lower", extent=extent)
+        img = ax.imshow(self.bands_grid[j, :, :],
+                        origin="lower", extent=extent)
+        fig.colorbar(img)
 
         for i in range(1, len(self.k_spoints)):
             kf_red = self.k_spoints[i]
@@ -184,7 +186,7 @@ class Simulation_TB():
             k_vec = ks_red[0] * self.rlat[0] + ks_red[1] * self.rlat[1]
             ax.plot(k_vec[0], k_vec[1], marker="o", markersize=5, color="red")
 
-        if ax is None:
+        if (ax is None) or (fig is None):
             return fig, ax
 
     def create_bands_grid(self, nk=50, delta_k=1.6*np.pi):
