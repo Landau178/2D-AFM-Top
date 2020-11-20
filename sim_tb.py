@@ -185,7 +185,8 @@ class Simulation_TB():
         for ks_red in self.k_spoints:
             k_vec = ks_red[0] * self.rlat[0] + ks_red[1] * self.rlat[1]
             ax.plot(k_vec[0], k_vec[1], marker="o", markersize=5, color="red")
-
+        ax.set_xlabel("$k_x$")
+        ax.set_ylabel("$k_y$")
         if (ax is None) or (fig is None):
             return fig, ax
 
