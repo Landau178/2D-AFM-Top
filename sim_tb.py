@@ -43,9 +43,16 @@ class Simulation_TB():
         self.path = pathlib.Path(path).absolute()
         self.save_config()
         self.read_config_file()
+        self.init_folders()
         self.model = pytb.tb_model(self.dim_k, self.dim_r,
                                    lat=self.lat, orb=self.orb, nspin=self.nspin)
         self.read_hoppings(name="hoppings_toy_model.dat")
+
+    def init_folders(self):
+        """
+        Create some folders in the parent directory.
+        """
+        toy.mk_dir(self.path / "bands/")
 
     def save_config(self):
         """

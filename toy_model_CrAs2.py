@@ -39,7 +39,7 @@ def float2str(x, decimals=3):
 
     """
     lenght_non_decimal = len(str(int(np.abs(x))))
-    if x > 0:
+    if x >= 0:
         length = decimals + lenght_non_decimal + 1
     else:
         length = decimals + lenght_non_decimal + 2
