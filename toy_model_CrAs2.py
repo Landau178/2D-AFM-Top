@@ -11,6 +11,8 @@ import pythtb as pytb
 
 import bz_utilities as bzu
 
+ROOT_DIR = "/home/orion178/Escritorio/Investigacion/2D-AFM-Top/"
+
 
 def float2str(x, decimals=3):
     """
@@ -41,7 +43,7 @@ def float2str(x, decimals=3):
         length = decimals + lenght_non_decimal + 1
     else:
         length = decimals + lenght_non_decimal + 2
-    str_x = str(round(x, decimals)).ljust("0", length)
+    str_x = str(round(x, decimals)).ljust(length, "0")
     return str_x
 
 
@@ -72,7 +74,7 @@ def create_path_toy_model(t, alpha, beta, h):
     str_h = float2str(h)
     str_parameters = "t={}_alpha={}_beta={}_h={}/".format(
         str_t, str_alpha, str_beta, str_h)
-    path = "saved_simulations/toy_model/"+str_parameters
+    path = ROOT_DIR + "saved_simulations/toy_model/"+str_parameters
     mk_dir(path)
     return pathlib.Path(path)
 
