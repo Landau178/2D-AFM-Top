@@ -391,5 +391,4 @@ if __name__ == "__main__":
     # # Sim.plot_bands(ax[0])
     # # Sim.plot_bands_2d(0, ax=ax[1])
     # # # plt.colorbar()
-
     # plt.show()
