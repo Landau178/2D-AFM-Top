@@ -137,7 +137,7 @@ class Simulation_TB():
         (k_vec, k_dist, k_node) = self.model.k_path(path, 1000, report=False)
         evals = self.model.solve_all(k_vec)
         print(k_node)
-        for i in range(len(self.orb)):
+        for i in range(self.nband):
             ax.plot(k_dist, evals[i, :], color="green")
 
         ax.set_xticks(k_node)
@@ -185,8 +185,8 @@ class Simulation_TB():
         for ks_red in self.k_spoints:
             k_vec = ks_red[0] * self.rlat[0] + ks_red[1] * self.rlat[1]
             ax.plot(k_vec[0], k_vec[1], marker="o", markersize=5, color="red")
-        ax.set_xlabel("$k_x$")
-        ax.set_ylabel("$k_y$")
+        ax.set_xlabel("$k_x$", fontsize=15)
+        ax.set_ylabel("$k_y$", fontsize=15)
         if (ax is None) or (fig is None):
             return fig, ax
 
@@ -248,9 +248,20 @@ class Simulation_TB():
             ax: (matplotlib.axes.Axes)
                 Axes to plot.
         """
-
-        img = ax.imshow(berry_fluxes.T, origin="lower")
+        extent = (0, 1.0, 0, 1.0)
+        img = ax.imshow(berry_fluxes.T, origin="lower", extent=extent)
         fig.colorbar(img)
+        # for i in range(1, len(self.k_spoints)):
+        #     kf_red = np.array(self.k_spoints[i]) % 1
+        #     k0_red = np.array(self.k_spoints[i-1]) % 1
+        #     ax.plot([k0_red[0], kf_red[0]], [k0_red[1],
+        #                                      kf_red[1]], ls="--", color="white")
+
+        for ks_red in self.k_spoints:
+            ks = np.array(ks_red) % 1  # to keep the point in the 1BZ
+            ax.plot(ks[0], ks[1], marker="o",
+                    markersize=5, color="red")
+
         ax.set_title("Berry curvature on 1BZ")
         ax.set_xlabel(r"$k_1$")
         ax.set_ylabel(r"$k_2$")
@@ -371,83 +382,14 @@ class Simulation_TB():
         return formated_line
 
 
-def list_to_str(foo_list):
-    """
-    Takes a list, and transform it to a string,
-    with elements separated by spaces.
-    Parameters:
-    -----------
-        foo_list: (list)
-            List with any content.
-            Elements must be convertible to str.
-    Returns:
-        line: (str)
-            if list is [1, 2, 3], then line is:
-            "1 2 3 "
-    """
-    n = len(foo_list)
-    line = ""
-    for i in range(n):
-        line += str(foo_list[i]) + " "
-    return line
-
-
-def create_hoppings_toy_model(path, t, lamb, h):
-    """
-    Create a text file with the hoppings of the toy model
-    of CrAs2.
-
-    """
-    a1 = np.array([1, 0, 0])
-    a2 = np.array([-0.5, np.sqrt(3)/2, 0])
-    l1 = 0.5 * a1
-    l2 = 0.5 * (a1 + a2)
-    l3 = 0.5 * a2
-    alpha = np.sqrt(3)/24 * lamb
-    beta = lamb / 36
-    onsite = [
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, h, 0],
-        [0, 0, 1, 1, 0, 0, 0, 0, 0, 0, -h, 0],
-        [0, 0, 2, 2, 0, 0, 0, 0, 0, 0, -h, 0],
-        [0, 0, 3, 3, 0, 0, 0, 0, 0, 0, h, 0]
-    ]
-    hopps_from0 = [
-        [0, 0, 0, 1, t, 0, 0, l1[0]*beta, 0, l1[1]*beta, 0, alpha],
-        [0, 0, 0, 2, t, 0, 0, l3[0]*beta, 0, l3[1]*beta, 0, alpha],
-        [0, 0, 0, 3, t, 0, 0, l2[0]*beta, 0, l2[1]*beta, 0, -alpha],
-        [-1, 0, 0, 1, t, 0, 0, -l1[0]*beta, 0, -l1[1]*beta, 0, -alpha],
-        [-1, -1, 0, 3, t, 0, 0, -l2[0]*beta, 0, -l2[1]*beta, 0, alpha],
-        [0, -1, 0, 2, t, 0, 0, -l3[0]*beta, 0, -l3[1]*beta, 0, -alpha],
-    ]
-    hopps_from1 = [
-        [0, 0, 1, 3, t, 0, 0, l3[0]*beta, 0, l3[1]*beta, 0, alpha],
-        [1, 0, 1, 2, t, 0, 0, l2[0]*beta, 0, l2[1]*beta, 0, -alpha],
-        [0, -1, 1, 3, t, 0, 0, -l3[0]*beta, 0, -l3[1]*beta, 0, -alpha],
-        [0, -1, 1, 2, t, 0, 0, -l2[0]*beta, 0, -l2[1]*beta, 0, alpha]
-    ]
-    hopps_from2 = [
-        [-1, 0, 2, 3, t, 0, 0, -l1[0]*beta, 0, -l1[1]*beta, 0, -alpha],
-        [0, 0, 2, 3, t, 0, 0, l1[0]*beta, 0, l1[1]*beta, 0, alpha]
-    ]
-    hopps = [*onsite, *hopps_from0, *hopps_from1, *hopps_from2]
-
-    name = path / "hoppings_toy_model.dat"
-    with open(name, 'w') as writer:
-        writer.write("# Each line is a hopping, with format:\n")
-        writer.write("# n1 n2 i j s0r s0i sxr sxi syr syi szr szi\n")
-        for hop in hopps:
-            line = list_to_str(hop)
-            writer.write(line + "\n")
-
-
 if __name__ == "__main__":
-    path = pathlib.Path("tests/")
-    create_hoppings_toy_model(path, 1, 0.0, 0.1)
-    Sim = Simulation_TB(path)
-    Sim.model.display()
-    # fig, ax = plt.subplots(1, 2)
-    # Sim.plot_bands(ax[0])
-    # Sim.plot_bands_2d(0, ax=ax[1])
-    # # plt.colorbar()
+    # path = pathlib.Path("tests/")
+    # create_hoppings_toy_model(path, 1, 0.0, 0.1)
+    # Sim = Simulation_TB(path)
+    # Sim.model.display()
+    # # fig, ax = plt.subplots(1, 2)
+    # # Sim.plot_bands(ax[0])
+    # # Sim.plot_bands_2d(0, ax=ax[1])
+    # # # plt.colorbar()
 
-    plt.show()
+    # plt.show()
