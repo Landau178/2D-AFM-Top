@@ -1,5 +1,6 @@
 
 import json
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import interpolate
@@ -9,6 +10,71 @@ import pathlib
 import pythtb as pytb
 
 import bz_utilities as bzu
+
+
+def float2str(x, decimals=3):
+    """
+    Takes a float, and returns a string justified with an
+    specific number of decimals.
+    Examples:
+    --------
+        float2str(-11.32, decimals=3)
+        >> "-11.320"
+        float2str(11.3234, decimals=3)
+        >> "11.323"
+    Parameters:
+    -----------
+        x: (float)
+            float to transform.
+        decimals: (int, default is 3)
+            Number of decimals to include in str expression.
+
+    Returns:
+    --------
+        str_x: (str)
+            String expression of rounded float x.
+
+
+    """
+    lenght_non_decimal = len(str(int(np.abs(x))))
+    if x > 0:
+        length = decimals + lenght_non_decimal + 1
+    else:
+        length = decimals + lenght_non_decimal + 2
+    str_x = str(round(x, decimals)).ljust("0", length)
+    return str_x
+
+
+def create_path_toy_model(t, alpha, beta, h):
+    """
+    Receives the parameters of the toy model, and creates
+    a folder for the simulation on:
+    ./saved_simulations/tou_model/str_parameters
+    with str_parameters being "t={}_alpha={}_beta={}_h={}"
+    with the respective values of the parameters.
+    Parameters:
+        t: (float)
+            Hopping NN.
+        alpha: (float)
+            SOC parameter on sigma_z
+        beta: (float)
+            SOC parameter on the link vector.
+        h: (float)
+            Staggered external magnetic field on z.
+    Returns:
+    --------
+        path: (ppathlib.Path)
+                Path to simulation.
+    """
+    str_t = float2str(t)
+    str_alpha = float2str(alpha)
+    str_beta = float2str(beta)
+    str_h = float2str(h)
+    str_parameters = "t={}_alpha={}_beta={}_h={}/".format(
+        str_t, str_alpha, str_beta, str_h)
+    path = "saved_simulations/toy_model/"+str_parameters
+    mk_dir(path)
+    return pathlib.Path(path)
 
 
 def list_to_str(foo_list):
@@ -78,3 +144,10 @@ def create_hoppings_toy_model(path, t, alpha, beta, h):
         for hop in hopps:
             line = list_to_str(hop)
             writer.write(line + "\n")
+
+
+def mk_dir(dir):
+    try:
+        os.makedirs(dir)
+    except OSError:
+        pass
