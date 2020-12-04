@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import interpolate
 from scipy import linalg as la
+from scipy import optimize as opt
 import pathlib
 
 import pythtb as pytb
@@ -311,9 +312,84 @@ class Simulation_TB():
         ax.set_xlabel(r"$k_1$")
         ax.set_ylabel(r"$k_2$")
 
+    def occupations_per_orbital(self, mu, T=0.001):
+        """
+        Calculate the occupations on each orbital, given a
+        chemical potential mu.
+
+        Note: Before calling this method, it is needed to
+        create the grid with:
+            self.create_bands_grid_red_coords
+
+        Parameters:
+        -----------
+            mu: (float)
+                Chemical Potential in eV.
+            T: (float, default is 0.001)
+                Temperature in Kelvin degrees.
+        Returns:
+        --------
+            occup: (np.ndarray, shape (norb, nspin))
+                Number occupations on each orbital/spin.
+        """
+        bands = self.red_bands_grid
+        eivecs = self.red_eivecs_grid
+        nk = np.shape(bands)[0]
+        nF = bzu.fermi_dist(bands, mu, T=T)
+        occups_k = np.einsum("kqb,kqbos -> kqos", nF, np.abs(eivecs)**2)
+        occups = np.sum(occups_k, axis=(0, 1)) / (nk**2)
+        return occups
+
+    def occup_upto_chem_pot(self, mu, T=1e-3):
+        """
+        Calculates the occupation number for a given chemical potential,
+        and returns n - self.Ne. This function is used to calculate the
+        chemical potential for a given number of electorns
+
+        in the unit cell.
+        Parameters:
+        -----------
+            mu: (float)
+                Chemical potential in eV.
+            T: (float)
+                Temperature in Kelvin degrees.
+        Returns:
+        --------
+            N: (int)
+                n-self.Ne, Where n is the occupation and self.Ne
+                the number of electrons in the unit cell.
+        """
+        occups = self.occupations_per_orbital(mu, T=T)
+        n = np.sum(occups)
+        return n - self.Ne
+
+    def chemical_potential(self, mu_min=None, mu_max=None, T=1e-3, tol=1e-3):
+        """
+        Calculates the Chemical potential.
+        """
+        ansatz_auto = (mu_min is None) or (mu_max is None)
+        if ansatz_auto:
+            eivals = self.model.solve_one([0, 0])
+            mu_min = eivals[0]
+            mu_max = eivals[-1]
+        try:
+            mu = opt.brentq(self.occup_upto_chem_pot,
+                            mu_min, mu_max, xtol=tol)
+        except ValueError:
+            mu_min = eivals[0] - 10
+            mu_max = eivals[-1] + 10
+            mssg = "Exception: Chemical potencial calculated between"
+            mssg += str(mu_min) + " and " + str(mu_max) + "."
+            print(mssg)
+            mu = opt.brentq(self.occup_upto_chem_pot,
+                            mu_min, mu_max, xtol=tol)
+        return mu
+
+
 # -----------------------------------------------------------------------------
 # Private methods for reading hopping file.
 # -----------------------------------------------------------------------------
+
 
     def __add_hopping_from_line(self, line, mode="set"):
         """
