@@ -90,6 +90,7 @@ class Simulation_TB():
         self.orb = config["orb"]
         self.nspin = config["nspin"]
         self.nband = len(self.orb) * self.nspin
+        self.Ne = config["Ne"]
         self.k_spoints = config["k_spoints"]
         self.k_sp_labels = config["k_sp_labels"]
 
