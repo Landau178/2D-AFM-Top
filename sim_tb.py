@@ -71,7 +71,7 @@ class Simulation_TB():
         k_spoints = [[0, 0], [1/3, 1/3], [0, 1/2], [-1/3, 2/3], [0, 0]]
         k_sp_labels = ["$\\Gamma$", "$K$", "$M$", "$K'$", "$\\Gamma$"]
         config = {"dim_k": 2, "dim_r": 3, "lat": lat,
-                  "orb": orb, "nspin": nspin, "Ne":4, "k_spoints": k_spoints,
+                  "orb": orb, "nspin": nspin, "Ne": 4, "k_spoints": k_spoints,
                   "k_sp_labels": k_sp_labels}
         with open(self.path / 'config.json', 'w') as fp:
             json.dump(config, fp, sort_keys=True, indent=4)
