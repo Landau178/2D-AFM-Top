@@ -198,6 +198,40 @@ class Simulation_TB():
         if (ax is None) or (fig is None):
             return fig, ax
 
+    def create_bands_grid_red_coord(self, nk=10):
+        """
+        Creates a grid og the eivengavlues and eigenvectors in a grid
+        (k1, k2), in such a wat that:
+            k = k1 * b1 + k2 * b2
+        with b1, b2, reciprocal lattice vectors.
+        The grid includes nk x nk values of k1 and k2 in the range (0, 1).
+
+        The solutions of the eigenvalue problem are saved in atributes:
+            self.red_bands_grid
+            self.red_eivecs_grid
+
+        Note: Only valid for k_dim=2.
+
+        Parameters:
+        -----------
+            nk: (int, default is 10)
+        Returns:
+        --------
+            None
+        """
+        k = np.linspace(0, 1, num=nk)
+        bands_grid = np.zeros((nk, nk, self.nband))
+        eivecs_grid = np.zeros(
+            (nk, nk, self.nband, len(self.orb), self.nspin), dtype="complex")
+        for i in range(nk):
+            for j in range(nk):
+                k_red = [k[i], k[j]]
+                eival, eivec = self.model.solve_one(k_red, eig_vectors=True)
+                bands_grid[i, j, :] = eival
+                eivecs_grid[i, j, :, :, :] = eivec
+        self.red_bands_grid = bands_grid
+        self.red_eivecs_grid = eivecs_grid
+
     def create_bands_grid(self, nk=50, delta_k=1.6*np.pi):
         """
         Create a gir d of the eigernvalues in cartesian coordinates of the
