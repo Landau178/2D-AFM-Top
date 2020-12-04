@@ -47,7 +47,7 @@ def float2str(x, decimals=3):
     return str_x
 
 
-def create_path_toy_model(t, alpha, beta, h):
+def create_path_toy_model(t, alpha, beta, h, folder=""):
     """
     Receives the parameters of the toy model, and creates
     a folder for the simulation on:
@@ -74,7 +74,8 @@ def create_path_toy_model(t, alpha, beta, h):
     str_h = float2str(h)
     str_parameters = "t={}_alpha={}_beta={}_h={}/".format(
         str_t, str_alpha, str_beta, str_h)
-    path = ROOT_DIR + "saved_simulations/toy_model/"+str_parameters
+    path = ROOT_DIR + "saved_simulations/toy_model/{}".format(folder)
+    path += str_parameters
     mk_dir(path)
     return pathlib.Path(path)
 
