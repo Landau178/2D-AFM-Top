@@ -9,6 +9,7 @@ import pathlib
 import pythtb as pytb
 
 import bz_utilities as bzu
+import toy_model_CrAs2 as toy
 
 
 class Simulation_TB():
