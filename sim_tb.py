@@ -234,8 +234,10 @@ class Simulation_TB():
 
     def create_bands_grid(self, nk=50, delta_k=1.6*np.pi):
         """
-        Create a gir d of the eigernvalues in cartesian coordinates of the
+        Creates a grid of the eigernvalues in cartesian coordinates of the
         k-space. Save the energies in atribute self.bands_grid.
+        This function is used for ploting the band structure in 2D.
+
         Parameters:
         ----------
             nk: (int, defalt is 50)
