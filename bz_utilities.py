@@ -31,3 +31,31 @@ def cartesian_to_reduced_k_matrix(b1, b2):
     ])
     M = la.inv(metric_tensor) @ B
     return M
+
+
+def fermi_dist(energies, mu, T=0.001):
+    """
+    Calculate the Fermi-Dirac distribution over
+    and array of energies, for a fixed value of the
+    temperature T.
+    Parameters:
+    -----------
+        energies: (np.ndarray, of any shape)
+            Array of energies in eV.
+        mu: (float)
+            Chemical potential in eV.
+        T: (float, default is 0.001)
+            Temperature in Kelvin degrees.
+
+    Returns:
+    -------
+        nF: (np.ndarray, shape shape of energies)
+            Fermi-Dirac dist evaluated in the array
+            energies.
+    """
+    kB = 8.6173324e-5
+    beta = 1 / (kB*T)
+    old_settings = np.seterr(over="ignore")
+    nF = 1. / (np.exp((energies-mu) * beta) + 1)
+    np.seterr(**old_settings)
+    return nF
