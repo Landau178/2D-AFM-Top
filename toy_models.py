@@ -11,6 +11,12 @@ import pythtb as pytb
 
 import bz_utilities as bzu
 
+
+# ------------------------------------------------------------------------------
+# References
+# [1] Yang Zhang et al 2018 New J. Phys.20 073028
+# ------------------------------------------------------------------------------
+
 ROOT_DIR = "/home/orion178/Escritorio/Investigacion/2D-AFM-Top/"
 
 
@@ -73,6 +79,30 @@ def list_to_str(foo_list):
     for i in range(n):
         line += str(foo_list[i]) + " "
     return line
+
+
+def spherical2cart(r, theta, phi):
+    """
+    Conversion of shperical to cartesian coordinates.
+    Parameters:
+    -----------
+        r: (float)
+            radial coordinate.
+        theta: (float)
+            Polar angle in  [0, pi].
+        phi: (float)
+            Azimuthal angle in [0, 2pi].
+    Returns:
+    --------
+        r_cart: (list of floats)
+            Cartesian coordinates:
+            [x, y, z]
+    """
+    x = r * np.sin(theta) * np.cos(phi)
+    y = r * np.sin(theta) * np.sin(phi)
+    z = r * np.cos(theta)
+    r_cart = [x, y, z]
+    return r_cart
 
 # -----------------------------------------------------------------------------
 # CrAs2 toy model
@@ -163,3 +193,161 @@ def create_hoppings_toy_model(path, t, alpha, beta, h):
 # -----------------------------------------------------------------------------
 # Kagome lattice
 # -----------------------------------------------------------------------------
+
+def init_kagome_model(t, J, mag_mode, folder=""):
+    """
+    Init the folder, configfile and hoppings file for a simulation
+    fo the Kagome lattice.
+
+    Parameters:
+    ----------
+        t, J, mag_mode: (float, float, str)
+            Parameters of model, see kagome_hoppings.
+        folder: (str, default is "")
+            Optional parameter of create_path_kafome_model.
+
+    Returns:
+    --------
+        path: (pathlib.Path)
+            Path of the simulation, which contains all neccesary files
+            to init sim_tb.Simulation_TB.
+    """
+    path = create_path_kagome_model(t, J, mag_mode, folder=folder)
+    kagome_config(path)
+    kagome_hoppings(path, t, J, mag_mode)
+    return path
+
+
+def create_path_kagome_model(t, J, mag_mode, folder=""):
+    """
+    Parameters:
+    -----------
+        t, J, mag_mode: (float, float, str)
+            Parameters of model, see kagome_hoppings.
+        folder: (str, default is "")
+            Location of the simulation folder is:
+            pathlib.Path(ROOT_DIR + folder)
+
+    Returns:
+    --------
+        path: (pathlib.Path)
+            Path to simulation folder.
+    """
+    str_t = float2str(t)
+    str_J = float2str(J)
+
+    str_parameters = "t={}_J={}_mag={}/".format(
+        str_t, str_J, mag_mode)
+    path = ROOT_DIR + "saved_simulations/toy_model/kagome/{}".format(folder)
+    path += str_parameters
+    mk_dir(path)
+    return pathlib.Path(path)
+
+
+def kagome_config(path):
+    """
+    Save the config file for the kagome lattice in:
+        path/config.json
+
+    Parameters:
+    -----------
+        path: (pathlib.Path)
+            Path to the simulation folder.
+    Returns:
+    ---------
+        None
+    """
+    a1 = [1, 0, 0]
+    a2 = [1/2, np.sqrt(3)/2, 0]
+    a3 = [0, 0, 1]
+    lat = [a1, a2, a3]
+    orb = [[0, 0, 0],
+           [1/2, 0, 0],
+           [0, 1/2, 0],
+           ]
+    nspin = 2
+    k_spoints = [[0, 0], [1/3, 1/3], [0, 1/2], [-1/3, 2/3], [0, 0]]
+    k_sp_labels = ["$\\Gamma$", "$K$", "$M$", "$K'$", "$\\Gamma$"]
+    config = {"dim_k": 2, "dim_r": 3, "lat": lat,
+              "orb": orb, "nspin": nspin, "Ne": 3, "k_spoints": k_spoints,
+              "k_sp_labels": k_sp_labels}
+    with open(path / 'config.json', 'w') as fp:
+        json.dump(config, fp, sort_keys=True, indent=4)
+
+
+def kagome_hoppings(path, t, J, mag_mode):
+    """
+    Create the hoppping file for the kagome lattice model,
+    acording to [1]:
+
+    Parameters:
+    -----------
+        path: (pathlib.Path)
+            path to the simulation folder.
+        t: (float)
+            NN hopping parameter.
+        J: (float)
+            Hund's coupling between ininerant electorns
+            and local moments.
+        mag_mode: (str)
+            String that labels tha magnetization texture.
+            See magnetic_texture_kagome.
+    """
+    mag_angles = magnetic_texture_kagome(mag_mode)
+    n = np.array([
+        spherical2cart(1, mag_angles[0, 0], mag_angles[0, 1]),
+        spherical2cart(1, mag_angles[1, 0], mag_angles[1, 1]),
+        spherical2cart(1, mag_angles[2, 0], mag_angles[2, 1])
+    ])
+    hoppings = [
+        [0, 0, 0, 1, t, 0],
+        [0, 0, 0, 2, t, 0],
+        [-1, 0, 0, 1, t, 0],
+        [0, -1, 0, 2, t, 0],
+        [0, 0, 1, 2, t, 0],
+        [1, -1, 1, 2, t, 0]
+    ]
+    exchange = [
+        [0, 0, 0, 0, 0, 0, -J*n[0, 0], 0, -J*n[0, 1], 0, -J*n[0, 2], 0],
+        [0, 0, 0, 0, 0, 0, -J*n[1, 0], 0, -J*n[1, 1], 0, -J*n[1, 2], 0],
+        [0, 0, 0, 0, 0, 0, -J*n[2, 0], 0, -J*n[2, 1], 0, -J*n[2, 2], 0]
+    ]
+    hopps = [*hoppings, *exchange]
+
+    name = path / "hoppings_kagome.dat"
+    with open(name, 'w') as writer:
+        writer.write("# Each line is a hopping, with format:\n")
+        writer.write("# n1 n2 i j s0r s0i sxr sxi syr syi szr szi\n")
+        for hop in hopps:
+            line = list_to_str(hop)
+            writer.write(line + "\n")
+
+
+def magnetic_texture_kagome(mode):
+    """
+    Returns the magnetization texture in the Kagome
+    lattice, according to the modes:
+        1. coplanar
+
+    Parameters:
+    -----------
+        mode (str)
+            String labeling the magnetic texture.
+    Returns:
+    --------
+        n_arr: (np.ndarray, of shape (3,2))
+            Array containing the magnetic texture:
+                n[i,:] = [theta, phi]
+                polar (theta) and azimuthal (phi)
+                angles of site i.
+
+    """
+    coplanar_texture = [
+        [np.pi/2, np.pi*(1/2 + 1/3)],
+        [np.pi/2, np.pi*(1/2 + 2/3)],
+        [np.pi/2, np.pi/2]
+    ]
+    texture_dict = {
+        "coplanar": np.array(coplanar_texture)
+    }
+    return texture_dict[mode]
