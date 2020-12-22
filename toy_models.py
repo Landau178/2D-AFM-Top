@@ -17,6 +17,9 @@ import bz_utilities as bzu
 # [1] Yang Zhang et al 2018 New J. Phys.20 073028
 # ------------------------------------------------------------------------------
 
+# IMPORTANT:
+# On this path the simulations are saved, modify this line
+# before using this module.
 ROOT_DIR = "/home/orion178/Escritorio/Investigacion/2D-AFM-Top/"
 
 
