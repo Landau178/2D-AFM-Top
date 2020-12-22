@@ -54,6 +54,31 @@ def float2str(x, decimals=3):
     return str_x
 
 
+def list_to_str(foo_list):
+    """
+    Takes a list, and transform it to a string,
+    with elements separated by spaces.
+    Parameters:
+    -----------
+        foo_list: (list)
+            List with any content.
+            Elements must be convertible to str.
+    Returns:
+        line: (str)
+            if list is [1, 2, 3], then line is:
+            "1 2 3 "
+    """
+    n = len(foo_list)
+    line = ""
+    for i in range(n):
+        line += str(foo_list[i]) + " "
+    return line
+
+# -----------------------------------------------------------------------------
+# CrAs2 toy model
+# -----------------------------------------------------------------------------
+
+
 def create_path_toy_model(t, alpha, beta, h, folder=""):
     """
     Receives the parameters of the toy model, and creates
@@ -85,27 +110,6 @@ def create_path_toy_model(t, alpha, beta, h, folder=""):
     path += str_parameters
     mk_dir(path)
     return pathlib.Path(path)
-
-
-def list_to_str(foo_list):
-    """
-    Takes a list, and transform it to a string,
-    with elements separated by spaces.
-    Parameters:
-    -----------
-        foo_list: (list)
-            List with any content.
-            Elements must be convertible to str.
-    Returns:
-        line: (str)
-            if list is [1, 2, 3], then line is:
-            "1 2 3 "
-    """
-    n = len(foo_list)
-    line = ""
-    for i in range(n):
-        line += str(foo_list[i]) + " "
-    return line
 
 
 def create_hoppings_toy_model(path, t, alpha, beta, h):
@@ -154,3 +158,8 @@ def create_hoppings_toy_model(path, t, alpha, beta, h):
         for hop in hopps:
             line = list_to_str(hop)
             writer.write(line + "\n")
+
+
+# -----------------------------------------------------------------------------
+# Kagome lattice
+# -----------------------------------------------------------------------------
