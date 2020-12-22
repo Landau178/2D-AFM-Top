@@ -34,6 +34,8 @@ class Simulation_TB():
         nspin: int
             2 if spin degree of freedom is not counted in orb.
             1 if it is.
+        Ne: (int)
+            Number of electrons in the unit cell.
         k_spoints: (list of floats)
             k special points in reduced coordinates.
         k_sp_labels: (list of str)
