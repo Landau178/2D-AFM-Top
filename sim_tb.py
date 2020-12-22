@@ -99,6 +99,7 @@ class Simulation_TB():
         self.Ne = config["Ne"]
         self.k_spoints = config["k_spoints"]
         self.k_sp_labels = config["k_sp_labels"]
+        self.hop_files = config["hop_files"]
 
     def set_recip_lat(self):
         """
