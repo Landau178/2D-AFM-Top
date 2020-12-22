@@ -14,6 +14,13 @@ import bz_utilities as bzu
 ROOT_DIR = "/home/orion178/Escritorio/Investigacion/2D-AFM-Top/"
 
 
+def mk_dir(dir):
+    try:
+        os.makedirs(dir)
+    except OSError:
+        pass
+
+
 def float2str(x, decimals=3):
     """
     Takes a float, and returns a string justified with an
@@ -147,10 +154,3 @@ def create_hoppings_toy_model(path, t, alpha, beta, h):
         for hop in hopps:
             line = list_to_str(hop)
             writer.write(line + "\n")
-
-
-def mk_dir(dir):
-    try:
-        os.makedirs(dir)
-    except OSError:
-        pass
