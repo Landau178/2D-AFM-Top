@@ -40,6 +40,8 @@ class Simulation_TB():
             k special points in reduced coordinates.
         k_sp_labels: (list of str)
             Labels for the k special points.
+        hop_files: (list of str)
+            Name of the hoppings files
 
     """
 
@@ -50,7 +52,8 @@ class Simulation_TB():
         self.init_folders()
         self.model = pytb.tb_model(self.dim_k, self.dim_r,
                                    lat=self.lat, orb=self.orb, nspin=self.nspin)
-        self.read_hoppings(name="hoppings_toy_model.dat")
+        for hop_file in self.hop_files:
+            self.read_hoppings(name=hop_file)
 
     def init_folders(self):
         """
