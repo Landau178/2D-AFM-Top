@@ -47,7 +47,7 @@ class Simulation_TB():
 
     def __init__(self, path):
         self.path = pathlib.Path(path).absolute()
-        self.save_config()
+        # self.save_config()
         self.read_config_file()
         self.init_folders()
         self.model = pytb.tb_model(self.dim_k, self.dim_r,
