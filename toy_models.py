@@ -269,8 +269,8 @@ def kagome_config(path):
            [0, 1/2, 0],
            ]
     nspin = 2
-    k_spoints = [[0, 0], [1/3, 2/3], [1/2, 1/2], [2/3, 1/3], [0, 0]]
-    k_sp_labels = ["$\\Gamma$", "$K$", "$M$", "$K'$", "$\\Gamma$"]
+    k_spoints = [[0, 0], [1/2, 1/2], [1/3, 2/3], [0, 1]]
+    k_sp_labels = ["$\\Gamma$", "$M$", "$K$", "$\\Gamma$"]
     hop_files = ["hoppings_kagome.dat"]
     config = {"dim_k": 2, "dim_r": 3, "lat": lat,
               "orb": orb, "nspin": nspin, "Ne": 3, "k_spoints": k_spoints,
@@ -347,8 +347,8 @@ def magnetic_texture_kagome(mode):
 
     """
     coplanar_texture = [
-        [np.pi/2, np.pi*(1/2 + 1/3)],
         [np.pi/2, np.pi*(1/2 + 2/3)],
+        [np.pi/2, np.pi*(1/2 + 4/3)],
         [np.pi/2, np.pi/2]
     ]
     texture_dict = {
