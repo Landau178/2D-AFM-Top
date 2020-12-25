@@ -18,7 +18,7 @@ def set_ticks_on_ax(ax, ticks, fs=15, axis="x"):
     set_ticks = {"x": ax.set_xticks,
                  "y": ax.set_yticks}[axis]
     set_ticklabels = {"x": ax.set_xticklabels,
-                      "y": ax.set_ticklabels}[axis]
+                      "y": ax.set_yticklabels}[axis]
 
     labels = list(map(str, ticks))
     set_ticks(ticks)
