@@ -137,7 +137,7 @@ class Simulation_TB():
                     continue
                 self.__add_hopping_from_line(line, mode=mode)
 
-    def plot_bands(self, ax):
+    def plot_bands(self, ax, color="green", lw=3):
         """
         Plot the bands in the given path of BZ.
 
@@ -145,6 +145,11 @@ class Simulation_TB():
         -----------
             ax: (matplotlib.axes.Axes)
                 Axes for plot.
+            color: (str or color, defualt is "green")
+                Color of lines in plot.
+            lw: (float, default is 3)
+                Line width.
+
         Returns:
         -------
             None
@@ -152,9 +157,8 @@ class Simulation_TB():
         path = self.k_spoints
         (k_vec, k_dist, k_node) = self.model.k_path(path, 1000, report=False)
         evals = self.model.solve_all(k_vec)
-        print(k_node)
         for i in range(self.nband):
-            ax.plot(k_dist, evals[i, :], color="green")
+            ax.plot(k_dist, evals[i, :], color=color, lw=lw)
 
         ax.set_xticks(k_node)
         ax.set_xticklabels(self.k_sp_labels, fontsize=15)
