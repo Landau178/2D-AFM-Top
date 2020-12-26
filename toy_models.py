@@ -197,14 +197,14 @@ def create_hoppings_toy_model(path, t, alpha, beta, h):
 # Kagome lattice
 # -----------------------------------------------------------------------------
 
-def init_kagome_model(t, J, mag_mode, folder=""):
+def init_kagome_model(t, J, t2, mag_mode, folder=""):
     """
     Init the folder, configfile and hoppings file for a simulation
     fo the Kagome lattice.
 
     Parameters:
     ----------
-        t, J, mag_mode: (float, float, str)
+        t, J, t2, mag_mode: (float, float, str)
             Parameters of model, see kagome_hoppings.
         folder: (str, default is "")
             Optional parameter of create_path_kafome_model.
@@ -215,17 +215,17 @@ def init_kagome_model(t, J, mag_mode, folder=""):
             Path of the simulation, which contains all neccesary files
             to init sim_tb.Simulation_TB.
     """
-    path = create_path_kagome_model(t, J, mag_mode, folder=folder)
+    path = create_path_kagome_model(t, J, t2, mag_mode, folder=folder)
     kagome_config(path)
-    kagome_hoppings(path, t, J, mag_mode)
+    kagome_hoppings(path, t, J, t2, mag_mode)
     return path
 
 
-def create_path_kagome_model(t, J, mag_mode, folder=""):
+def create_path_kagome_model(t, J, t2, mag_mode, folder=""):
     """
     Parameters:
     -----------
-        t, J, mag_mode: (float, float, str)
+        t, J, t2, mag_mode: (float, float, str)
             Parameters of model, see kagome_hoppings.
         folder: (str, default is "")
             Location of the simulation folder is:
@@ -238,9 +238,10 @@ def create_path_kagome_model(t, J, mag_mode, folder=""):
     """
     str_t = float2str(t)
     str_J = float2str(J)
+    str_t2 = float2str(t2)
 
-    str_parameters = "t={}_J={}_mag={}/".format(
-        str_t, str_J, mag_mode)
+    str_parameters = "t={}_J={}_t2={}_mag={}/".format(
+        str_t, str_J, str_t2, mag_mode)
     path = ROOT_DIR + "saved_simulations/toy_model/kagome/{}".format(folder)
     path += str_parameters
     mk_dir(path)
@@ -279,7 +280,7 @@ def kagome_config(path):
         json.dump(config, fp, sort_keys=True, indent=4)
 
 
-def kagome_hoppings(path, t, J, mag_mode):
+def kagome_hoppings(path, t, J, t2, mag_mode):
     """
     Create the hoppping file for the kagome lattice model,
     acording to [1]:
@@ -291,8 +292,10 @@ def kagome_hoppings(path, t, J, mag_mode):
         t: (float)
             NN hopping parameter.
         J: (float)
-            Hund's coupling between ininerant electorns
+            Hund's coupling between ininerant electrons
             and local moments.
+        t2:(float)
+            Strength of the SOC.
         mag_mode: (str)
             String that labels tha magnetization texture.
             See magnetic_texture_kagome.
@@ -303,13 +306,17 @@ def kagome_hoppings(path, t, J, mag_mode):
         spherical2cart(1, mag_angles[1, 0], mag_angles[1, 1]),
         spherical2cart(1, mag_angles[2, 0], mag_angles[2, 1])
     ])
+    n1 = [0, 1]
+    n2 = [-np.sqrt(3)/2, -1/2]
+    n3 = [np.sqrt(3)/2, -1/2]
+
     hoppings = [
-        [0, 0, 0, 1, t, 0],
-        [0, 0, 0, 2, t, 0],
-        [-1, 0, 0, 1, t, 0],
-        [0, -1, 0, 2, t, 0],
-        [0, 0, 1, 2, t, 0],
-        [1, -1, 1, 2, t, 0]
+        [0, 0, 0, 1, t, 0, 0, t2*n1[0], 0, t2*n1[1], 0, 0],
+        [0, 0, 0, 2, t, 0, 0, -t2*n3[0], 0, -t2*n3[1], 0, 0],
+        [-1, 0, 0, 1, t, 0, 0, t2*n1[0], 0, t2*n1[1], 0, 0],
+        [0, -1, 0, 2, t, 0, 0, -t2*n3[0], 0, -t2*n3[1], 0, 0],
+        [0, 0, 1, 2, t, 0, 0, t2*n2[0], 0, t2*n2[1], 0, 0],
+        [1, -1, 1, 2, t, 0, 0, t2*n2[0], 0, t2*n2[1], 0, 0]
     ]
     exchange = [
         [0, 0, 0, 0, 0, 0, -J*n[0, 0], 0, -J*n[0, 1], 0, -J*n[0, 2], 0],
