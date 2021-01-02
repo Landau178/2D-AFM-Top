@@ -466,7 +466,7 @@ class Simulation_TB():
         should be initialized.
         """
         nk = self.nk
-        v_grid = np.zeros((nk, nk, 2, self.nband, self.nband),
+        v_grid = np.zeros((2, nk, nk, self.nband, self.nband),
                           dtype="complex")
         for i in range(nk):
             for j in range(nk):
@@ -477,19 +477,21 @@ class Simulation_TB():
                 vy_U = np.einsum("isjd, ejd->ise", v_orb[1], eivec)
                 v_x = np.einsum("mis, isn-> mn", eivec.conj(), vx_U)
                 v_y = np.einsum("mis, isn-> mn", eivec.conj(), vy_U)
-                v_grid[i, j, :, :, :] = np.array([v_x, v_y])
+                v_grid[0, i, j, :, :] = v_x
+                v_grid[1, i, j, :, :] = v_y
         return v_grid
 
     def create_wf_grid(self, nk):
         self.wf_BZ = pytb.wf_array(self.model, [nk, nk])
         self.wf_BZ.solve_on_grid([0, 0])
         self.nk = nk - 1
+        self.create_bands_grid_red_coord(
+            nk=self.nk, return_eivec=False, endpoint=False)
 
 
 # -----------------------------------------------------------------------------
 # Private methods for reading hopping file.
 # -----------------------------------------------------------------------------
-
 
     def __add_hopping_from_line(self, line, mode="set"):
         """
