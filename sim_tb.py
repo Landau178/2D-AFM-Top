@@ -210,7 +210,7 @@ class Simulation_TB():
         if (ax is None) or (fig is None):
             return fig, ax
 
-    def create_bands_grid_red_coord(self, nk=10):
+    def create_bands_grid_red_coord(self, nk=10, return_eivec=True):
         """
         Creates a grid og the eivengavlues and eigenvectors in a grid
         (k1, k2), in such a wat that:
@@ -227,6 +227,8 @@ class Simulation_TB():
         Parameters:
         -----------
             nk: (int, default is 10)
+            return_eivec: (bool, default is True)
+                If True, eigenvectors are calculated.
         Returns:
         --------
             None
@@ -238,11 +240,17 @@ class Simulation_TB():
         for i in range(nk):
             for j in range(nk):
                 k_red = [k[i], k[j]]
-                eival, eivec = self.model.solve_one(k_red, eig_vectors=True)
-                bands_grid[i, j, :] = eival
-                eivecs_grid[i, j, :, :, :] = eivec
+                if return_eivec:
+                    eival, eivec = self.model.solve_one(
+                        k_red, eig_vectors=True)
+                    bands_grid[i, j, :] = eival
+                    eivecs_grid[i, j, :, :, :] = eivec
+                else:
+                    eival = self.model.solve_one(k_red, eig_vectors=True)
+                    bands_grid[i, j, :] = eival
         self.red_bands_grid = bands_grid
-        self.red_eivecs_grid = eivecs_grid
+        if return_eivec:
+            self.red_eivecs_grid = eivecs_grid
 
     def create_bands_grid(self, nk=50, delta_k=1.6*np.pi):
         """
