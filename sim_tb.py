@@ -395,6 +395,85 @@ class Simulation_TB():
                             mu_min, mu_max, xtol=tol)
         return mu
 
+    def gradient_kred_Hamiltonian(self, kpt):
+        """
+        Calculate the k-gradient of the Hamiltonian
+        in reduced coordinates.
+        Parameters:
+        -----------
+            kpt: (list of floats)
+                Reduced coordinates of k-point
+        Returns:
+        --------
+            Grad_H: (np.ndarray, shape (dim_k, n_orb, nspin, norb,nspin)
+                if nspin=1, and (dim_k, n_orb, norb) if nspin=2)
+                Gradient of the Hamiltonian, computed as:
+                Grad_H[0,:,:,:,:] = (H(k1+eps, k2,..)-H(k1,k2,...))/eps
+                Grad_H[1,:,:,:,:] = (H(k1, k2+eps,..)-H(k1,k2,...))/eps
+                Here k1, k2,... are reduced coordinates of k,
+                in such a way:
+                    k = Sum_i ki*bi // (bi are reciprocal lattice vectors)
+        """
+        eps = 1e-9
+        norb = len(self.orb)
+        nspin = self.nspin
+        if nspin == 1:
+            shape_grad = (self.dim_k, norb, norb)
+        else:
+            shape_grad = (self.dim_k, norb, nspin, norb, nspin)
+        grad_H = np.zeros(shape_grad, dtype="complex")
+        H0 = self.model._gen_ham(k_input=kpt)
+        for i in range(self.dim_k):
+            dk = np.zeros(self.dim_k)
+            dk[i] += eps
+            kpt_i = np.array(kpt) + dk
+            H_i = self.model._gen_ham(k_input=kpt_i)
+            grad_H[i] = (H_i - H0) / eps
+        return grad_H
+
+    def velocity_operator(self, kpt):
+        """
+        Calculate the velocity operator as the k-gradient
+        of the Hamiltonian.
+
+        Note: The result should be multiplicated by
+        a0/ hbar to recover the physical units.
+        """
+        grad_H = self.gradient_kred_Hamiltonian(kpt)
+        M = bzu.cartesian_to_reduced_k_matrix(self.rlat[0], self.rlat[1])
+        v = np.zeros_like(grad_H)
+        v[0] = grad_H[0] * M[0, 0] + grad_H[1] * M[1, 0]
+        v[1] = grad_H[0] * M[0, 1] + grad_H[1] * M[1, 1]
+        return v
+
+    def velocity_operator_grid(self):
+        """
+        Evaluates the velocity operator in the basis
+        of eigenstates, on a grid in the 1BZ.
+
+        Note: Before calling this method, a grid with self.create_wf_grid
+        should be initialized.
+        """
+        nk = self.nk
+        v_grid = np.zeros((nk, nk, 2, self.nband, self.nband),
+                          dtype="complex")
+        for i in range(nk):
+            for j in range(nk):
+                kpt = [i/nk, j/nk]
+                eivec = self.wf_BZ[i, j]
+                v_orb = self.velocity_operator(kpt)
+                vx_U = np.einsum("isjd, ejd->ise", v_orb[0], eivec)
+                vy_U = np.einsum("isjd, ejd->ise", v_orb[1], eivec)
+                v_x = np.einsum("mis, isn-> mn", eivec.conj(), vx_U)
+                v_y = np.einsum("mis, isn-> mn", eivec.conj(), vy_U)
+                v_grid[i, j, :, :, :] = np.array([v_x, v_y])
+        return v_grid
+
+    def create_wf_grid(self, nk):
+        self.wf_BZ = pytb.wf_array(self.model, [nk, nk])
+        self.wf_BZ.solve_on_grid([0, 0])
+        self.nk = nk - 1
+
 
 # -----------------------------------------------------------------------------
 # Private methods for reading hopping file.
