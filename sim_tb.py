@@ -229,6 +229,9 @@ class Simulation_TB():
             nk: (int, default is 10)
             return_eivec: (bool, default is True)
                 If True, eigenvectors are calculated.
+            endpoint:
+                If True, the last point and the first one are physically
+                equivalent. (PB conditions)
         Returns:
         --------
             None
