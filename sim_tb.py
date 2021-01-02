@@ -210,7 +210,7 @@ class Simulation_TB():
         if (ax is None) or (fig is None):
             return fig, ax
 
-    def create_bands_grid_red_coord(self, nk=10, return_eivec=True):
+    def create_bands_grid_red_coord(self, nk=10, return_eivec=True, endpoint=True):
         """
         Creates a grid og the eivengavlues and eigenvectors in a grid
         (k1, k2), in such a wat that:
