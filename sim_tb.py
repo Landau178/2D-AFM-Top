@@ -233,7 +233,7 @@ class Simulation_TB():
         --------
             None
         """
-        k = np.linspace(0, 1, num=nk)
+        k = np.linspace(0, 1, num=nk, endpoint=endpoint)
         bands_grid = np.zeros((nk, nk, self.nband))
         eivecs_grid = np.zeros(
             (nk, nk, self.nband, len(self.orb), self.nspin), dtype="complex")
