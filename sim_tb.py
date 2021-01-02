@@ -249,7 +249,7 @@ class Simulation_TB():
                     bands_grid[i, j, :] = eival
                     eivecs_grid[i, j, :, :, :] = eivec
                 else:
-                    eival = self.model.solve_one(k_red, eig_vectors=True)
+                    eival = self.model.solve_one(k_red, eig_vectors=False)
                     bands_grid[i, j, :] = eival
         self.red_bands_grid = bands_grid
         if return_eivec:
