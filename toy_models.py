@@ -274,7 +274,7 @@ def kagome_config(path):
     k_sp_labels = ["$\\Gamma$", "$M$", "$K$", "$\\Gamma$"]
     hop_files = ["hoppings_kagome.dat"]
     config = {"dim_k": 2, "dim_r": 3, "lat": lat,
-              "orb": orb, "nspin": nspin, "Ne": 3, "k_spoints": k_spoints,
+              "orb": orb, "nspin": nspin, "Ne": 1, "k_spoints": k_spoints,
               "k_sp_labels": k_sp_labels, "hop_files": hop_files}
     with open(path / 'config.json', 'w') as fp:
         json.dump(config, fp, sort_keys=True, indent=4)
