@@ -59,3 +59,15 @@ def fermi_dist(energies, mu, T=0.001):
     nF = 1. / (np.exp((energies-mu) * beta) + 1)
     np.seterr(**old_settings)
     return nF
+
+
+def pauli_matrix(i):
+    """
+    Returns the i-th pauli Matrix.
+    """
+    pauli_matrices = np.array([
+        [[0, 1], [1, 0]],
+        [[0, -1j], [1j, 0]],
+        [[1, 0], [0, 1]]
+    ])
+    return pauli_matrices[i]
