@@ -5,6 +5,7 @@ import numpy as np
 from scipy import interpolate
 from scipy import linalg as la
 from scipy import optimize as opt
+from scipy import integrate as integ
 import pathlib
 
 import pythtb as pytb
