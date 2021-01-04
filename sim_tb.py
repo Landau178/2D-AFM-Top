@@ -406,6 +406,19 @@ class Simulation_TB():
                             mu_min, mu_max, xtol=tol)
         return mu
 
+    def set_fermi_lvl(self, tol=1e-4, nk=100):
+        """
+        Set the fermi level in atribute self.Ef
+
+        Parameters:
+        -----------
+            tol: (float, default is 1e-4)
+                Tolerance in energy.
+            nk: (int, default is 100)
+        """
+        self.create_bands_grid_red_coord(nk=nk, endpoint=False)
+        self.Ef = self.chemical_potential(tol=tol)
+
     def gradient_kred_Hamiltonian(self, kpt):
         """
         Calculate the k-gradient of the Hamiltonian
