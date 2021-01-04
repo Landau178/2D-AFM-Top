@@ -340,7 +340,7 @@ class Simulation_TB():
 
         Note: Before calling this method, it is needed to
         create the grid with:
-            self.create_bands_grid_red_coords
+            self.create_bands_grid_red_coord
 
         Parameters:
         -----------
