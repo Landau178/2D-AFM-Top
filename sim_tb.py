@@ -471,6 +471,62 @@ class Simulation_TB():
         v[1] = grad_H[0] * M[0, 1] + grad_H[1] * M[1, 1]
         return v
 
+    def spin_conductivity_k(self, k1, k2, i, a, b, Gamma):
+        """
+        Note: This method needs the atribute self.Ef already set with the
+        Fermi level. This can be done by calling self.set_fermi_lvl()
+
+        Parameters:
+        ----------
+            k1, k2: (floats)
+                K-point in red. coord.
+            i, a, b: (int, int , int)
+                Components of spin conductivity tensor.
+                    i: spin polarization.
+                    a: direction of current
+                    b: direction of applied electric field.
+            Gamma: (float)
+                band broadening. (disorder)
+
+        Returns:
+        -------
+            sigma_k: (float)
+                Contribution to the spin conductivity at kpt.
+        """
+        kpt = [k1, k2]
+        eivals, eivecs = self.model.solve_one(kpt, eig_vectors=True)
+        S = bzu.pauli_matrix(i) / 2
+        S_eig = np.einsum("nis, st, mit-> nm", eivecs.conj(), S, eivecs)
+        v = self.velocity_operator(kpt)
+        vx_eig = np.einsum("nis, isjd, mjd-> nm", eivecs.conj(), v[0], eivecs)
+        vy_eig = np.einsum("nis, isjd, mjd-> nm", eivecs.conj(), v[1], eivecs)
+        v_eig = [vx_eig, vy_eig]
+        js = 0.5 * (S_eig @ v_eig[a] + v_eig[a] @ S_eig)
+
+        gE = 1. / ((self.Ef-eivals)**2 + Gamma**2)
+        sigma_k = np.einsum("n, nm, m, mn->", gE, js, gE, v_eig[b])
+        sigma_k = - np.real(sigma_k) * Gamma**2 / np.pi
+        return sigma_k
+
+    def spin_conductivity(self, i, a, b, Gamma=1e-3):
+        """
+        """
+        opts = {"epsabs": 1e-5}
+        ranges = [[0, 1], [0, 1]]
+        result, abserr = integ.nquad(self.spin_conductivity_k, ranges, args=(i, a, b, Gamma),
+                                     opts=opts)
+        return result, abserr
+# -----------------------------------------------------------------------------
+# Operators in regular k-grid
+# -----------------------------------------------------------------------------
+
+    def create_wf_grid(self, nk):
+        self.wf_BZ = pytb.wf_array(self.model, [nk, nk])
+        self.wf_BZ.solve_on_grid([0, 0])
+        self.nk = nk - 1
+        self.create_bands_grid_red_coord(
+            nk=self.nk, return_eivec=False, endpoint=False)
+
     def velocity_operator_grid(self):
         """
         Evaluates the velocity operator in the basis
@@ -495,13 +551,48 @@ class Simulation_TB():
                 v_grid[1, i, j, :, :] = v_y
         return v_grid
 
-    def create_wf_grid(self, nk):
-        self.wf_BZ = pytb.wf_array(self.model, [nk, nk])
-        self.wf_BZ.solve_on_grid([0, 0])
-        self.nk = nk - 1
-        self.create_bands_grid_red_coord(
-            nk=self.nk, return_eivec=False, endpoint=False)
+    def spin_operator_grid(self):
+        """
+        Parameters:
+        -----------
+            None
+        Returns:
+        --------
+            S_grid
+        """
+        nk = self.nk
+        S_grid = np.zeros((3, nk, nk, self.nband, self.nband),
+                          dtype="complex")
+        for i in range(nk):
+            for j in range(nk):
+                eivec = self.wf_BZ[i, j]
+                for s in range(3):
+                    S = bzu.pauli_matrix(s) / 2
+                    S_eig = np.einsum("nis, st, mit-> nm",
+                                      eivec.conj(), S, eivec)
+                    S_grid[s, i, j, :, :] = S_eig
+        return S_grid
 
+    def spin_current_grid(self):
+        """
+        Parameters:
+        ----------
+            None
+        Returns:
+        --------
+            js_grid
+        """
+        nk = self.nk
+        js_grid = np.zeros(
+            (3, 2, nk, nk, self.nband, self.nband), dtype="complex")
+        S_grid = self.spin_operator_grid()
+        v_grid = self.velocity_operator_grid()
+        for spin in range(3):
+            for v_ax in range(2):
+                sv = np.einsum("ijnm, ijml->ijnl", S_grid[spin], v_grid[v_ax])
+                vs = np.einsum("ijnm, ijml->ijnl", v_grid[v_ax], S_grid[spin])
+                js_grid[spin, v_ax] = 0.5 * (sv + vs)
+        return js_grid
 
 # -----------------------------------------------------------------------------
 # Private methods for reading hopping file.
