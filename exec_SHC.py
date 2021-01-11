@@ -72,5 +72,5 @@ path = {"s": Sim.path / "spin_conductivity/",
         "c": Sim.path / "charge_conductivity/"}[mode]
 toy.mk_dir(path)
 name = {"s": "SHC_{}{}{}.npy".format(
-    i, a, b), "c": "CHC_{}{}.npy".format(a, b)}
+    i, a, b), "c": "CHC_{}{}.npy".format(a, b)}[mode]
 np.save(path / name, integ_result)
