@@ -516,6 +516,35 @@ class Simulation_TB():
         result, abserr = integ.nquad(self.spin_conductivity_k, ranges, args=(i, a, b, Gamma),
                                      opts=opts)
         return result, abserr
+
+    def charge_conductivity_k(self, k1, k2, a, b, Gamma):
+        """
+        Same as self.spin_conductivity_k, but calculates
+        the odd charge conductivity
+        """
+        kpt = [k1, k2]
+        eivals, eivecs = self.model.solve_one(kpt, eig_vectors=True)
+
+        v = self.velocity_operator(kpt)
+        vx_eig = np.einsum("nis, isjd, mjd-> nm", eivecs.conj(), v[0], eivecs)
+        vy_eig = np.einsum("nis, isjd, mjd-> nm", eivecs.conj(), v[1], eivecs)
+        v_eig = [vx_eig, vy_eig]
+
+        gE = 1. / ((self.Ef-eivals)**2 + Gamma**2)
+        sigma_k = np.einsum("n, nm, m, mn->", gE, v_eig[a], gE, v_eig[b])
+        sigma_k = - np.real(sigma_k) * Gamma**2 / np.pi
+        return sigma_k
+
+    def charge_copnductivity(self, a, b, Gamma):
+        """
+        """
+        opts = {"epsabs": 1e-5}
+        ranges = [[0, 1], [0, 1]]
+        result, abserr = integ.nquad(self.charge_conductivity_k, ranges,
+                                     args=(a, b, Gamma), opts=opts)
+        return result, abserr
+
+
 # -----------------------------------------------------------------------------
 # Operators in regular k-grid
 # -----------------------------------------------------------------------------
