@@ -74,3 +74,5 @@ toy.mk_dir(path)
 name = {"s": "SHC_{}{}{}.npy".format(
     i, a, b), "c": "CHC_{}{}.npy".format(a, b)}[mode]
 np.save(path / name, integ_result)
+print("")
+print("")
