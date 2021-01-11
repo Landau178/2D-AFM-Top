@@ -14,7 +14,7 @@ import linear_response as lr
 
 # -----------------------------------------------------------------------------
 # This script perform calculations of different components of
-# the spin conductivity tensor (odd under time-reversal).
+# the spin and charge conductivity tensors (odd under time-reversal).
 # -----------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
