@@ -535,7 +535,7 @@ class Simulation_TB():
         sigma_k = - np.real(sigma_k) * Gamma**2 / np.pi
         return sigma_k
 
-    def charge_copnductivity(self, a, b, Gamma):
+    def charge_conductivity(self, a, b, Gamma):
         """
         """
         opts = {"epsabs": 1e-5}
