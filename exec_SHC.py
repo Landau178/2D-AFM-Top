@@ -29,6 +29,8 @@ Parser.add('-b', default=0, action='store',
            type=int, help="Direction of the applied electric field")
 Parser.add("--mode", default="s", action="store", type=str,
            help="s for spin conductivity, c for charge conductiviy.")
+Parser.add("--concat", action="store_true",
+           help="Whether to concatenate result with existing calculation.")
 
 
 options = Parser.parse_args()
@@ -36,6 +38,7 @@ i = options.i
 a = options.a
 b = options.b
 mode = options.mode
+concat = options.concat
 
 mssg_s = "Calculation of the component\
      ({},{},{}) of the spin conductivity tensor.".format(i, a, b)
@@ -64,15 +67,23 @@ for g in range(nG):
             "c": (a, b, gamma_arr[g])}[mode]
     result.append(conductivity(*args))
 
-# Saving result
 integ_result = np.zeros((nG, 3))
 integ_result[:, 0] = gamma_arr
 integ_result[:, 1:3] = np.array(result)
-path = {"s": Sim.path / "spin_conductivity/",
-        "c": Sim.path / "charge_conductivity/"}[mode]
-toy.mk_dir(path)
+path_result = {"s": Sim.path / "spin_conductivity/",
+               "c": Sim.path / "charge_conductivity/"}[mode]
+toy.mk_dir(path_result)
 name = {"s": "SHC_{}{}{}.npy".format(
     i, a, b), "c": "CHC_{}{}.npy".format(a, b)}[mode]
-np.save(path / name, integ_result)
+
+
+# Concatenate the new result to an existing one
+if concat:
+    old_integ_result = np.load(path_result / name)
+    integ_result = np.concatenate((old_integ_result, integ_result), axis=0)
+
+# Saving result deleting any previous calculation
+np.save(path_result / name, integ_result)
+
 print("")
 print("")
