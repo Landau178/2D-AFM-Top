@@ -471,6 +471,10 @@ class Simulation_TB():
         v[1] = grad_H[0] * M[0, 1] + grad_H[1] * M[1, 1]
         return v
 
+# -----------------------------------------------------------------------------
+# Spin conductivities
+# -----------------------------------------------------------------------------
+
     def spin_conductivity_k(self, k1, k2, i, a, b, Gamma):
         """
         Note: This method needs the atribute self.Ef already set with the
@@ -510,6 +514,8 @@ class Simulation_TB():
 
     def spin_conductivity(self, i, a, b, Gamma=1e-3):
         """
+        BZ integration of the odd spin conductivity tensor.
+        (See self.spin_conductivity_k_odd documentation)
         """
         opts = {"epsabs": 1e-5}
         ranges = [[0, 1], [0, 1]]
@@ -520,7 +526,7 @@ class Simulation_TB():
     def charge_conductivity_k(self, k1, k2, a, b, Gamma):
         """
         Same as self.spin_conductivity_k, but calculates
-        the odd charge conductivity
+        the odd charge conductivity.
         """
         kpt = [k1, k2]
         eivals, eivecs = self.model.solve_one(kpt, eig_vectors=True)
@@ -537,12 +543,17 @@ class Simulation_TB():
 
     def charge_conductivity(self, a, b, Gamma):
         """
+        BZ integration of the odd charge conductivity.
         """
         opts = {"epsabs": 1e-5}
         ranges = [[0, 1], [0, 1]]
         result, abserr = integ.nquad(self.charge_conductivity_k, ranges,
                                      args=(a, b, Gamma), opts=opts)
         return result, abserr
+
+# -----------------------------------------------------------------------------
+# Berry curvature and Chern's number with the velocity operator.
+# -----------------------------------------------------------------------------
 
     def berry_curvature(self, k1, k2, n, a, b):
         """
