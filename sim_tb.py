@@ -544,11 +544,39 @@ class Simulation_TB():
                                      args=(a, b, Gamma), opts=opts)
         return result, abserr
 
+    def berry_curvature(self, k1, k2, n, a, b):
+        """
+        """
+        kpt = [k1, k2]
+        eivals, eivecs = self.model.solve_one(kpt, eig_vectors=True)
+        v = self.velocity_operator(kpt)
+        vx_eig = np.einsum("nis, isjd, mjd-> nm", eivecs.conj(), v[0], eivecs)
+        vy_eig = np.einsum("nis, isjd, mjd-> nm", eivecs.conj(), v[1], eivecs)
+        v_eig = [vx_eig, vy_eig]
+        Omega = 0
+        for m in range(self.nband):
+            if m != n:
+                denominator = (eivals[n]-eivals[m])**2
+                Omega += v_eig[a][n, m] * v_eig[b][m, n] / denominator
+        return np.real(Omega * 2j)
+
+    def chern_integrand(self, k1, k2, n):
+        Omega_xy = self.berry_curvature(k1, k2, n, 0, 1)
+        Omega_yx = 0
+        # We have included a 2 factor at the end of berry_curvature
+        return (Omega_xy-Omega_yx) / (2 * np.pi)
+
+    def chern_number(self, n):
+        opts = {"epsabs": 1e-3}
+        ranges = [[0, 1], [0, 1]]
+        result, abserr = integ.nquad(self.chern_integrand, ranges,
+                                     args=(n,), opts=opts)
+        return result, abserr
+
 
 # -----------------------------------------------------------------------------
 # Operators in regular k-grid
 # -----------------------------------------------------------------------------
-
 
     def create_wf_grid(self, nk):
         self.wf_BZ = pytb.wf_array(self.model, [nk, nk])
