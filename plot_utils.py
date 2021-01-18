@@ -56,11 +56,11 @@ def sigma_s_label(number_components):
     Parameters:
     -----------
         number_components: (tuple of 3 ints)
-                Integers representing cartesian components.
+            Integers representing cartesian components.
     Returns:
     --------
         label: (str,str,str)
-                Label representing the component of the spin
+            Label representing the component of the spin
             conductivity tensor.
     """
     cart_comp = int2cart(number_components)
