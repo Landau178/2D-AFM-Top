@@ -61,6 +61,33 @@ def fermi_dist(energies, mu, T=0.001):
     return nF
 
 
+def index_fermi_level(bands, Ef):
+    """
+    Returns the index of the last occuped state,
+    according to the fermi level.
+
+    Parameters:
+    -----------
+        bands: (np.ndarray, shape (nband,))
+            Energies, ordered from the lowest to the highest.
+        Ef: (float)
+            Fermi Level.
+    Returns:
+    -------
+        index_Ef: (int)
+            Index of the top occupied state.
+            -1 means no occupied sate.
+    """
+    index_Ef = -1
+    nband = np.size(bands)
+    for i in range(nband):
+        if bands[i] < Ef:
+            index_Ef += 1
+        else:
+            break
+    return index_Ef
+
+
 def pauli_matrix(i):
     """
     Returns the i-th pauli Matrix.
