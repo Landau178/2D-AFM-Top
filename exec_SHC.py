@@ -49,7 +49,7 @@ print(mssg)
 # -----------------------------------------------------------------------------
 
 # Init the simulation
-t, J, t2 = 1.0, 1.7, 0.0
+t, J, t2 = 1.0, 1.7, 0.2
 mag_mode = "coplanar"
 path = toy.init_kagome_model(t, J, t2, mag_mode)
 Sim = stb.Simulation_TB(path)
@@ -57,7 +57,8 @@ Sim.set_fermi_lvl()
 conductivity = {"s": Sim.spin_conductivity, "c": Sim.charge_conductivity}[mode]
 
 # Calculation of spin conductivity
-gamma_arr = np.logspace(0, 1, num=11)[1::]  # np.logspace(-3, 0, num=50)
+gamma_arr = np.concatenate(
+    (np.logspace(-3, 0, num=50), np.logspace(0, 1, num=11)[1::]))
 nG = np.size(gamma_arr)
 result = []
 for g in range(nG):
