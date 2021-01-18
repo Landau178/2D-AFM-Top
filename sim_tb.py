@@ -523,6 +523,40 @@ class Simulation_TB():
                                      opts=opts)
         return result, abserr
 
+    def spin_conductivity_k_even(self, k1, k2, i, a, b):
+        """
+        """
+        kpt = [k1, k2]
+        eivals, eivecs = self.model.solve_one(kpt, eig_vectors=True)
+        S = bzu.pauli_matrix(i) / 2
+        S_eig = np.einsum("nis, st, mit-> nm", eivecs.conj(), S, eivecs)
+        v = self.velocity_operator(kpt)
+        vx_eig = np.einsum("nis, isjd, mjd-> nm", eivecs.conj(), v[0], eivecs)
+        vy_eig = np.einsum("nis, isjd, mjd-> nm", eivecs.conj(), v[1], eivecs)
+        v_eig = [vx_eig, vy_eig]
+        js = 0.5 * (S_eig @ v_eig[a] + v_eig[a] @ S_eig)
+        index_Ef = bzu.index_fermi_level(eivals, self.Ef)
+        sigma_k = 0
+        for n in range(index_Ef+1):
+            for m in range(index_Ef+1, self.nband):
+                denominator = (eivals[n]-eivals[m])**2
+                sigma_k += -2 * js[n, m]*v_eig[b][m, n] / denominator
+        return np.imag(sigma_k)
+
+    def spin_conductivity_even(self, i, a, b):
+        """
+        """
+        opts = {"epsabs": 1e-5}
+        ranges = [[0, 1], [0, 1]]
+        result, abserr = integ.nquad(self.spin_conductivity_k_even, ranges, args=(i, a, b),
+                                     opts=opts)
+        return result, abserr
+
+
+# -----------------------------------------------------------------------------
+# Charge conductivities
+# -----------------------------------------------------------------------------
+
     def charge_conductivity_k(self, k1, k2, a, b, Gamma):
         """
         Same as self.spin_conductivity_k, but calculates
@@ -549,6 +583,34 @@ class Simulation_TB():
         ranges = [[0, 1], [0, 1]]
         result, abserr = integ.nquad(self.charge_conductivity_k, ranges,
                                      args=(a, b, Gamma), opts=opts)
+        return result, abserr
+
+    def charge_conductivity_k_even(self, k1, k2, a, b):
+        """
+        """
+        kpt = [k1, k2]
+        eivals, eivecs = self.model.solve_one(kpt, eig_vectors=True)
+        v = self.velocity_operator(kpt)
+        vx_eig = np.einsum("nis, isjd, mjd-> nm", eivecs.conj(), v[0], eivecs)
+        vy_eig = np.einsum("nis, isjd, mjd-> nm", eivecs.conj(), v[1], eivecs)
+        v_eig = [vx_eig, vy_eig]
+
+        index_Ef = bzu.index_fermi_level(eivals, self.Ef)
+        sigma_k = 0
+        for n in range(index_Ef+1):
+            for m in range(index_Ef+1, self.nband):
+                denominator = (eivals[n]-eivals[m])**2
+                sigma_k += -2 * v_eig[a][n, m]*v_eig[b][m, n] / denominator
+        return np.imag(sigma_k)
+
+    def charge_conductivity_even(self, a, b, Gamma):
+        """
+        BZ integration of the even charge conductivity.
+        """
+        opts = {"epsabs": 1e-5}
+        ranges = [[0, 1], [0, 1]]
+        result, abserr = integ.nquad(self.charge_conductivity_k_even, ranges,
+                                     args=(a, b), opts=opts)
         return result, abserr
 
 # -----------------------------------------------------------------------------
@@ -591,6 +653,7 @@ class Simulation_TB():
 # -----------------------------------------------------------------------------
 # Operators in regular k-grid
 # -----------------------------------------------------------------------------
+
 
     def create_wf_grid(self, nk):
         self.wf_BZ = pytb.wf_array(self.model, [nk, nk])
