@@ -558,6 +558,9 @@ class Simulation_TB():
     def berry_curvature(self, k1, k2, n, a, b):
         """
         """
+        # Geometry dependent factor
+        # it should be calculated from the lattice vectors
+        factor = 8*np.sqrt(3) * np.pi**2 / 3
         kpt = [k1, k2]
         eivals, eivecs = self.model.solve_one(kpt, eig_vectors=True)
         v = self.velocity_operator(kpt)
@@ -569,7 +572,7 @@ class Simulation_TB():
             if m != n:
                 denominator = (eivals[n]-eivals[m])**2
                 Omega += v_eig[a][n, m] * v_eig[b][m, n] / denominator
-        return np.real(Omega * 2j)
+        return np.real(Omega * 2j) * factor
 
     def chern_integrand(self, k1, k2, n):
         Omega_xy = self.berry_curvature(k1, k2, n, 0, 1)
