@@ -66,5 +66,5 @@ def sigma_s_label(number_components):
     cart_comp = int2cart(number_components)
     str_x1 = "{" + cart_comp[0] + "}"
     str_x2x3 = "{" + cart_comp[1] + cart_comp[2] + "}"
-    label = f"$\sigma^{str_x1}_{str_x2x3}$"
+    label = fr"$\sigma^{str_x1}_{str_x2x3}$"
     return label
