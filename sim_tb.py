@@ -617,7 +617,7 @@ class Simulation_TB():
 # Berry curvature and Chern's number with the velocity operator.
 # -----------------------------------------------------------------------------
 
-    def berry_curvature(self, k1, k2, n, a, b):
+    def berry_curvature(self, k1, k2, n, a, b, mode="re"):
         """
         """
         # Geometry dependent factor
@@ -634,7 +634,9 @@ class Simulation_TB():
             if m != n:
                 denominator = (eivals[n]-eivals[m])**2
                 Omega += v_eig[a][n, m] * v_eig[b][m, n] / denominator
-        return np.real(Omega * 2j) * factor
+        # ADD REAL PART HERE !!!!!
+        casting = {"re": np.real, "im": np.imag}[mode]
+        return casting((Omega * 2j)) * factor
 
     def chern_integrand(self, k1, k2, n):
         Omega_xy = self.berry_curvature(k1, k2, n, 0, 1)
