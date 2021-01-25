@@ -651,6 +651,30 @@ class Simulation_TB():
                                      args=(n,), opts=opts)
         return result, abserr
 
+    def spin_berry_curvature(self, k1, k2, n, i, a, b, mode="re"):
+        """
+        """
+        # Geometry dependent factor
+        # it should be calculated from the lattice vectors
+        factor = 8*np.sqrt(3) * np.pi**2 / 3
+        kpt = [k1, k2]
+        eivals, eivecs = self.model.solve_one(kpt, eig_vectors=True)
+        S = bzu.pauli_matrix(i) / 2
+        S_eig = np.einsum("nis, st, mit-> nm", eivecs.conj(), S, eivecs)
+        v = self.velocity_operator(kpt)
+        vx_eig = np.einsum("nis, isjd, mjd-> nm", eivecs.conj(), v[0], eivecs)
+        vy_eig = np.einsum("nis, isjd, mjd-> nm", eivecs.conj(), v[1], eivecs)
+        v_eig = [vx_eig, vy_eig]
+        js = 0.5 * (S_eig @ v_eig[a] + v_eig[a] @ S_eig)
+        Omega = 0
+        for m in range(self.nband):
+            if m != n:
+                denominator = (eivals[n]-eivals[m])**2
+                Omega += js[n, m] * v_eig[b][m, n] / denominator
+        # ADD REAL PART HERE !!!!!
+        casting = {"re": np.real, "im": np.imag}[mode]
+        return casting((Omega * 2j)) * factor
+
 
 # -----------------------------------------------------------------------------
 # Operators in regular k-grid
