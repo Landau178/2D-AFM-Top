@@ -95,6 +95,6 @@ def pauli_matrix(i):
     pauli_matrices = np.array([
         [[0, 1], [1, 0]],
         [[0, -1j], [1j, 0]],
-        [[1, 0], [0, 1]]
+        [[1, 0], [0, -1]]
     ])
     return pauli_matrices[i]
