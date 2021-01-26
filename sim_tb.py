@@ -545,15 +545,9 @@ class Simulation_TB():
         """
         kpt = [k1, k2]
         eivals, eivecs = self.model.solve_one(kpt, eig_vectors=True)
-
         v = self.velocity_operator(kpt)
-        vx_eig = np.einsum("nis, isjd, mjd-> nm", eivecs.conj(), v[0], eivecs)
-        vy_eig = np.einsum("nis, isjd, mjd-> nm", eivecs.conj(), v[1], eivecs)
-        v_eig = [vx_eig, vy_eig]
-
-        gE = 1. / ((self.Ef-eivals)**2 + Gamma**2)
-        sigma_k = np.einsum("n, nm, m, mn->", gE, v_eig[a], gE, v_eig[b])
-        sigma_k = - np.real(sigma_k) * Gamma**2 / np.pi
+        sigma_k = lr.charge_conductivity_k(
+            eivals, eivecs, v, self.Ef, a, b, Gamma)
         return sigma_k
 
     def charge_conductivity(self, a, b, Gamma):
@@ -572,17 +566,9 @@ class Simulation_TB():
         kpt = [k1, k2]
         eivals, eivecs = self.model.solve_one(kpt, eig_vectors=True)
         v = self.velocity_operator(kpt)
-        vx_eig = np.einsum("nis, isjd, mjd-> nm", eivecs.conj(), v[0], eivecs)
-        vy_eig = np.einsum("nis, isjd, mjd-> nm", eivecs.conj(), v[1], eivecs)
-        v_eig = [vx_eig, vy_eig]
-
-        index_Ef = bzu.index_fermi_level(eivals, self.Ef)
-        sigma_k = 0
-        for n in range(index_Ef+1):
-            for m in range(index_Ef+1, self.nband):
-                denominator = (eivals[n]-eivals[m])**2
-                sigma_k += -2 * v_eig[a][n, m]*v_eig[b][m, n] / denominator
-        return np.imag(sigma_k)
+        sigma_k = lr.charge_conductivity_k_even(
+            eivals, eivecs, v, self.Ef, a, b)
+        return sigma_k
 
     def charge_conductivity_even(self, a, b, Gamma):
         """
