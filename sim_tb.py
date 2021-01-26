@@ -680,7 +680,6 @@ class Simulation_TB():
 # Operators in regular k-grid
 # -----------------------------------------------------------------------------
 
-
     def create_wf_grid(self, nk):
         self.wf_BZ = pytb.wf_array(self.model, [nk, nk])
         self.wf_BZ.solve_on_grid([0, 0])
@@ -688,72 +687,6 @@ class Simulation_TB():
         self.create_bands_grid_red_coord(
             nk=self.nk, return_eivec=False, endpoint=False)
 
-    def velocity_operator_grid(self):
-        """
-        Evaluates the velocity operator in the basis
-        of eigenstates, on a grid in the 1BZ.
-
-        Note: Before calling this method, a grid with self.create_wf_grid
-        should be initialized.
-        """
-        nk = self.nk
-        v_grid = np.zeros((2, nk, nk, self.nband, self.nband),
-                          dtype="complex")
-        for i in range(nk):
-            for j in range(nk):
-                kpt = [i/nk, j/nk]
-                eivec = self.wf_BZ[i, j]
-                v_orb = self.velocity_operator(kpt)
-                vx_U = np.einsum("isjd, ejd->ise", v_orb[0], eivec)
-                vy_U = np.einsum("isjd, ejd->ise", v_orb[1], eivec)
-                v_x = np.einsum("mis, isn-> mn", eivec.conj(), vx_U)
-                v_y = np.einsum("mis, isn-> mn", eivec.conj(), vy_U)
-                v_grid[0, i, j, :, :] = v_x
-                v_grid[1, i, j, :, :] = v_y
-        return v_grid
-
-    def spin_operator_grid(self):
-        """
-        Parameters:
-        -----------
-            None
-        Returns:
-        --------
-            S_grid
-        """
-        nk = self.nk
-        S_grid = np.zeros((3, nk, nk, self.nband, self.nband),
-                          dtype="complex")
-        for i in range(nk):
-            for j in range(nk):
-                eivec = self.wf_BZ[i, j]
-                for s in range(3):
-                    S = bzu.pauli_matrix(s) / 2
-                    S_eig = np.einsum("nis, st, mit-> nm",
-                                      eivec.conj(), S, eivec)
-                    S_grid[s, i, j, :, :] = S_eig
-        return S_grid
-
-    def spin_current_grid(self):
-        """
-        Parameters:
-        ----------
-            None
-        Returns:
-        --------
-            js_grid
-        """
-        nk = self.nk
-        js_grid = np.zeros(
-            (3, 2, nk, nk, self.nband, self.nband), dtype="complex")
-        S_grid = self.spin_operator_grid()
-        v_grid = self.velocity_operator_grid()
-        for spin in range(3):
-            for v_ax in range(2):
-                sv = np.einsum("ijnm, ijml->ijnl", S_grid[spin], v_grid[v_ax])
-                vs = np.einsum("ijnm, ijml->ijnl", v_grid[v_ax], S_grid[spin])
-                js_grid[spin, v_ax] = 0.5 * (sv + vs)
-        return js_grid
 
 # -----------------------------------------------------------------------------
 # Private methods for reading hopping file.
