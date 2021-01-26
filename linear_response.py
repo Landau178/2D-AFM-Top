@@ -12,79 +12,100 @@ import sim_tb as stb
 #     PRL119,187204 (2017)
 #     DOI: 10.1103/PhysRevLett.119.187204
 
+# -----------------------------------------------------------------------------
+# Spin conduictivities, odd and even.
+# -----------------------------------------------------------------------------
 
-def Xi_I(velocity, bands, E_F, Gamma=1e-8, alpha=0):
+
+def spin_conductivity_k(eivals, eivecs, velocity, Ef, i, a, b, Gamma):
     """
-    Calculate Xi_I according to [1].
+    Calculate the k-resolved odd spin conductivity at a given k-point,
+    according to [1].
+    In the following, n is the number of bands, 
 
     Parameters:
-    -----------
-        Velocity: (np.ndarray, shape (nk,nk, nband,nband))
-            Velocity operator in the basis of eigenstates.
-            Evaluated on a grid in the 1BZ. (reduced coordinates)
-            [k1,k2, band1, band2]
-        bands:(np.ndarray, shape (nk, nk, nband))
-            Grid of eigenvalues ordered as [k1, k2, band]
-        E_F: (float)
+    ----------
+        eivals: (np.ndarray shape is (n,))
+            Eigenvals at som k-point.
+        eivecs: (np.ndarray shape is (n,norb, 2))
+            Eigenvectors at some k-point.
+            First component is for bands, second is for
+            orbital and third for spin.
+        velocity: (np.ndarray, shape is (norb,2,norb, 2))
+            Velocity operator. Gradient of the Hamiltonian matrix at k.
+        Ef: (float)
             Fermi level.
+        i, a, b: (int, int , int)
+            Components of spin conductivity tensor.
+                i: spin polarization.
+                a: direction of current
+                b: direction of applied electric field.
         Gamma: (float)
-            Band broadening, product of disorder.
-        alpha: (float)
-            Angle of the electric field.
-            E = (cos(alpha), sin(alpha))
+            band broadening. (disorder)
+
     Returns:
-    --------
-        Xi
+    -------
+        sigma_k: (float)
+            Contribution to the odd spin conductivity at k.
     """
-    nk = np.shape(bands)[0]
-    Ex, Ey = np.cos(alpha), np.sin(alpha)
-    vE = velocity[0] * Ex + velocity[1] * Ey
-    gE = 1. / ((E_F-bands)**2 + Gamma**2)
-    XiI_k = np.einsum("ijn, ijnm, ijm, ijmn->ij", gE, velocity[0], gE, vE)
-    Xi = np.sum(XiI_k) / (nk**2)
-    Xi = - np.real(Xi) * Gamma**2 / np.pi
-    return Xi
+    S = bzu.pauli_matrix(i) / 2
+    S_eig = np.einsum("nis, st, mit-> nm", eivecs.conj(), S, eivecs)
+    vx_eig = np.einsum("nis, isjd, mjd-> nm",
+                       eivecs.conj(), velocity[0], eivecs)
+    vy_eig = np.einsum("nis, isjd, mjd-> nm",
+                       eivecs.conj(), velocity[1], eivecs)
+    v_eig = [vx_eig, vy_eig]
+    js = 0.5 * (S_eig @ v_eig[a] + v_eig[a] @ S_eig)
+
+    gE = 1. / ((Ef-eivals)**2 + Gamma**2)
+    sigma_k = np.einsum("n, nm, m, mn->", gE, js, gE, v_eig[b])
+    sigma_k = - np.real(sigma_k) * Gamma**2 / np.pi
+    return sigma_k
 
 
-def spin_conductivity_I(js, vel, bands, E_F, Gamma=1e-8, alpha=0, sum_k=True):
+def spin_conductivity_k_even(eivals, eivecs, velocity, Ef, i, a, b):
     """
+    Calculate the k-resolved even spin conductivity at a given k-point,
+    according to [1].
+
     Parameters:
-    -----------
-        js: (np.ndarray, shape (nk, nk, nband, nband))
-            A component if the spin current operator,
-            on a grid in k-space. In the basis of eigenstates.
-        vel: (np.ndarray, shape (2, nk, nk, nband, nband))
-            Velocity operator, in the basis of eigenstates,
-            evaluated on a grid in k-space.
-        bands: (np.ndarray, shape (nk, nk, nband))
-            Grid of eigenenergies.
-        E_F: (float)
-            Fermi level
-        Gamma: (float default 1e-8)
-            Band's broadening. (disorder)
-        alpha: (float default 0)
-            Angle of the applied electric field.
-            (alpha=0 for x axis, alpha=pi/2 for y axis.)
-        sum_k: (Bool default True)
-            Flag to determin if k-integration is performed or not.
-    Returns:
-    --------
-        If sum_k==True:
-            Xi_k: (np.ndarray,shape (nk, nk))
-                Spin conducticity, on a k-grid.
-        else:
-            Xi: (float)
-                Spin conductivity.
+    ----------
+        eivals: (np.ndarray shape is (n,))
+            Eigenvals at som k-point.
+        eivecs: (np.ndarray shape is (n,norb, 2))
+            Eigenvectors at some k-point.
+            First component is for bands, second is for
+            orbital and third for spin.
+        velocity: (np.ndarray, shape is (norb,2,norb, 2))
+            Velocity operator. Gradient of the Hamiltonian matrix at k.
+        Ef: (float)
+            Fermi level.
+        i, a, b: (int, int , int)
+            Components of spin conductivity tensor.
+                i: spin polarization.
+                a: direction of current
+                b: direction of applied electric field.
+        Gamma: (float)
+            band broadening. (disorder)
 
+    Returns:
+    -------
+        sigma_k: (float)
+            Contribution to the even spin conductivity at k.
     """
-    nk = np.shape(bands)[0]
-    Ex, Ey = np.cos(alpha), np.sin(alpha)
-    vE = vel[0] * Ex + vel[1] * Ey
-    gE = 1. / ((E_F-bands)**2 + Gamma**2)
-    XiI_k = np.einsum("ijn, ijnm, ijm, ijmn->ij", gE, js, gE, vE)
-    XiI_k = - np.real(XiI_k) * Gamma**2 / np.pi
-    if sum_k:
-        Xi = np.sum(XiI_k) / (nk**2)
-    else:
-        Xi = XiI_k
-    return Xi
+    nband = np.size(eivals)
+    S = bzu.pauli_matrix(i) / 2
+    S_eig = np.einsum("nis, st, mit-> nm", eivecs.conj(), S, eivecs)
+    vx_eig = np.einsum("nis, isjd, mjd-> nm",
+                       eivecs.conj(), velocity[0], eivecs)
+    vy_eig = np.einsum("nis, isjd, mjd-> nm",
+                       eivecs.conj(), velocity[1], eivecs)
+    v_eig = [vx_eig, vy_eig]
+    js = 0.5 * (S_eig @ v_eig[a] + v_eig[a] @ S_eig)
+    index_Ef = bzu.index_fermi_level(eivals, Ef)
+    sigma_k = 0
+    for n in range(index_Ef+1):
+        for m in range(index_Ef+1, nband):
+            denominator = (eivals[n]-eivals[m])**2
+            sigma_k += -2 * js[n, m]*v_eig[b][m, n] / denominator
+    return np.imag(sigma_k)

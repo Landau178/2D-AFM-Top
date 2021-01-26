@@ -11,6 +11,7 @@ import pathlib
 import pythtb as pytb
 
 import bz_utilities as bzu
+import linear_response as lr
 import toy_models as toy
 
 
@@ -486,9 +487,6 @@ class Simulation_TB():
                 K-point in red. coord.
             i, a, b: (int, int , int)
                 Components of spin conductivity tensor.
-                    i: spin polarization.
-                    a: direction of current
-                    b: direction of applied electric field.
             Gamma: (float)
                 band broadening. (disorder)
 
@@ -499,17 +497,9 @@ class Simulation_TB():
         """
         kpt = [k1, k2]
         eivals, eivecs = self.model.solve_one(kpt, eig_vectors=True)
-        S = bzu.pauli_matrix(i) / 2
-        S_eig = np.einsum("nis, st, mit-> nm", eivecs.conj(), S, eivecs)
         v = self.velocity_operator(kpt)
-        vx_eig = np.einsum("nis, isjd, mjd-> nm", eivecs.conj(), v[0], eivecs)
-        vy_eig = np.einsum("nis, isjd, mjd-> nm", eivecs.conj(), v[1], eivecs)
-        v_eig = [vx_eig, vy_eig]
-        js = 0.5 * (S_eig @ v_eig[a] + v_eig[a] @ S_eig)
-
-        gE = 1. / ((self.Ef-eivals)**2 + Gamma**2)
-        sigma_k = np.einsum("n, nm, m, mn->", gE, js, gE, v_eig[b])
-        sigma_k = - np.real(sigma_k) * Gamma**2 / np.pi
+        sigma_k = lr.spin_conductivity_k(
+            eivals, eivecs, v, self.Ef, i, a, b, Gamma)
         return sigma_k
 
     def spin_conductivity(self, i, a, b, Gamma=1e-3):
@@ -528,20 +518,10 @@ class Simulation_TB():
         """
         kpt = [k1, k2]
         eivals, eivecs = self.model.solve_one(kpt, eig_vectors=True)
-        S = bzu.pauli_matrix(i) / 2
-        S_eig = np.einsum("nis, st, mit-> nm", eivecs.conj(), S, eivecs)
         v = self.velocity_operator(kpt)
-        vx_eig = np.einsum("nis, isjd, mjd-> nm", eivecs.conj(), v[0], eivecs)
-        vy_eig = np.einsum("nis, isjd, mjd-> nm", eivecs.conj(), v[1], eivecs)
-        v_eig = [vx_eig, vy_eig]
-        js = 0.5 * (S_eig @ v_eig[a] + v_eig[a] @ S_eig)
-        index_Ef = bzu.index_fermi_level(eivals, self.Ef)
-        sigma_k = 0
-        for n in range(index_Ef+1):
-            for m in range(index_Ef+1, self.nband):
-                denominator = (eivals[n]-eivals[m])**2
-                sigma_k += -2 * js[n, m]*v_eig[b][m, n] / denominator
-        return np.imag(sigma_k)
+        sigma_k = lr.spin_conductivity_k_even(
+            eivals, eivecs, v, self.Ef, i, a, b)
+        return sigma_k
 
     def spin_conductivity_even(self, i, a, b):
         """
@@ -556,6 +536,7 @@ class Simulation_TB():
 # -----------------------------------------------------------------------------
 # Charge conductivities
 # -----------------------------------------------------------------------------
+
 
     def charge_conductivity_k(self, k1, k2, a, b, Gamma):
         """
@@ -680,6 +661,7 @@ class Simulation_TB():
 # Operators in regular k-grid
 # -----------------------------------------------------------------------------
 
+
     def create_wf_grid(self, nk):
         self.wf_BZ = pytb.wf_array(self.model, [nk, nk])
         self.wf_BZ.solve_on_grid([0, 0])
@@ -691,6 +673,7 @@ class Simulation_TB():
 # -----------------------------------------------------------------------------
 # Private methods for reading hopping file.
 # -----------------------------------------------------------------------------
+
 
     def __add_hopping_from_line(self, line, mode="set"):
         """
