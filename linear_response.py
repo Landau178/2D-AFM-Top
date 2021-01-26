@@ -110,6 +110,10 @@ def spin_conductivity_k_even(eivals, eivecs, velocity, Ef, i, a, b):
             sigma_k += -2 * js[n, m]*v_eig[b][m, n] / denominator
     return np.imag(sigma_k)
 
+# -----------------------------------------------------------------------------
+# Charge conduictivities, odd and even.
+# -----------------------------------------------------------------------------
+
 
 def charge_conductivity_k(eivals, eivecs, velocity, Ef, a, b, Gamma):
     """
