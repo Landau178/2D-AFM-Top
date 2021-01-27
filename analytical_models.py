@@ -1,6 +1,9 @@
 
 import numpy as np
+from scipy import integrate as integ
 import scipy.linalg as la
+
+import linear_response as lr
 
 # References
 # ----------
@@ -42,6 +45,14 @@ class Rashba_model():
         H = H_r + self.Hzee
         return H
 
+    def velocity_operator(self, kx, ky, dk=1e-10):
+        H = self.hamiltonian(kx, ky)
+        Hdx = self.hamiltonian(kx + dk, ky)
+        Hdy = self.hamiltonian(kx, ky + dk)
+        vx = (Hdx - H) / dk
+        vy = (Hdy - H) / dk
+        return [vx, vy]
+
     def solve_one(self, kx, ky, eig_vectors=False):
         H = self.hamiltonian(kx, ky)
         diagonalization = la.eigh(H, eigvals_only=not(eig_vectors))
@@ -63,3 +74,20 @@ class Rashba_model():
         fig.colorbar(img)
         ax.set_xlabel("$k_x$", fontsize=15)
         ax.set_ylabel("$k_y$", fontsize=15)
+
+    def spin_conductivity_k(self, kx, ky, Ef, i, a, b, Gamma):
+        """
+        """
+        eivals, eivecs = self.solve_one(kx, ky, eig_vectors=True)
+        v = self.velocity_operator(kx, ky)
+        sigma_k = lr.spin_conductivity_k(
+            eivals, eivecs, v, Ef, i, a, b, Gamma)
+        return sigma_k
+
+    def spin_conductivity(self, Ef, i, a, b, Gamma, kmax=10):
+        opts = {"epsabs": 1e-5}
+        ranges = [[-kmax, kmax], [-kmax, kmax]]
+        args = (Ef, i, a, b, Gamma)
+        result, abserr = integ.nquad(self.spin_conductivity_k, ranges, args=args,
+                                     opts=opts)
+        return result, abserr
