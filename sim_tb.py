@@ -54,6 +54,7 @@ class Simulation_TB():
         self.init_folders()
         self.model = pytb.tb_model(self.dim_k, self.dim_r,
                                    lat=self.lat, orb=self.orb, nspin=self.nspin)
+        self.hoppings = []
         for hop_file in self.hop_files:
             self.read_hoppings(name=hop_file)
 
@@ -537,7 +538,6 @@ class Simulation_TB():
 # Charge conductivities
 # -----------------------------------------------------------------------------
 
-
     def charge_conductivity_k(self, k1, k2, a, b, Gamma):
         """
         Same as self.spin_conductivity_k, but calculates
@@ -647,7 +647,6 @@ class Simulation_TB():
 # Operators in regular k-grid
 # -----------------------------------------------------------------------------
 
-
     def create_wf_grid(self, nk):
         self.wf_BZ = pytb.wf_array(self.model, [nk, nk])
         self.wf_BZ.solve_on_grid([0, 0])
@@ -659,7 +658,6 @@ class Simulation_TB():
 # -----------------------------------------------------------------------------
 # Private methods for reading hopping file.
 # -----------------------------------------------------------------------------
-
 
     def __add_hopping_from_line(self, line, mode="set"):
         """
@@ -692,6 +690,10 @@ class Simulation_TB():
         Recieves a line of the hopping text file and returns the parameters
         that characterizes the hopping/onsite term.
 
+        Note: After last update, the function also save the hoppings in atribute
+        self.hoppings: (list)
+            each element in format [n1, n2, i, j, hop_sim]
+            and hop_sim = [t0, tx, ty, tz]
         Input:
         ------
             line: (str)
@@ -735,12 +737,17 @@ class Simulation_TB():
             sy = float(line[8]) + 1j * float(line[9])
             sz = float(line[10]) + 1j * float(line[11])
             h = [h, sx, sy, sz]
+
         is_onsite = n1 == 0 and n2 == 0
         is_onsite = is_onsite and i == j
+        # hop_sim will be used to sabe hopping in self.hoppings
+        hop_sim = h if spin_resolved else [h, 0, 0, 0]
         if is_onsite:
             hop = (i, h)
+            self.hoppings.append([0, 0, i, i, hop_sim])
         else:
             hop = (n1, n2, i, j, h)
+            self.hoppings.append([n1, n2, i, j, h, 0, 0, 0])
         return hop, is_onsite
 
     def __reformat_line(self, line):
