@@ -100,6 +100,23 @@ def pauli_matrix(i):
     return pauli_matrices[i]
 
 
+def pauli_vector(coefs):
+    """
+    Parameters:
+    -----------
+        coefs: (float, float, float, float)
+            Coefficients (t0, tx, ty, tz).
+    Returns:
+        matrix: (np.ndarray shape is )
+    """
+    t0 = coefs[0]
+    matrix = np.array([[t0, 0], [0, t0]])
+    for i in range(3):
+        sigma_i = pauli_matrix(i)
+        matrix += coefs[i+1] * sigma_i
+    return matrix
+
+
 def fix_gauge_eigenvector(eivecs):
     """
     Take the matrix of eigenvectors and make real
