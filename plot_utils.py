@@ -28,7 +28,7 @@ def set_ticks_on_ax(ax, ticks, fs=15, axis="x"):
 
 def int2cart(number_components):
     """
-    This function takes a tuple representing a 3-rank
+    This function takes a tuple representing a n-rank
     tensor component. It returns the associated strings
     in cartesian coordinates. 
     Example:  (0, 1, 0) --> ("x", "y", "z")
