@@ -98,3 +98,27 @@ def pauli_matrix(i):
         [[1, 0], [0, -1]]
     ])
     return pauli_matrices[i]
+
+
+def fix_gauge_eigenvector(eivecs):
+    """
+    Take the matrix of eigenvectors and make real
+    the first component of each one.
+
+    Parameters:
+    ----------
+        eivecs: (np.ndarray, shape (n,n))
+            eivecs[i, n] is the i-component
+            of the n-eigenvetor.
+    Returns:
+    --------
+        new_eivecs: (np.ndarray, shape (n,n))
+            Eigenvectors with the first component
+            real.
+    """
+    n = np.shape(eivecs)[0]
+    new_eivecs = np.copy(eivecs)
+    for i in range(n):
+        phase = np.angle(eivecs[0, i])
+        new_eivecs[:, i] = eivecs[:, i] * np.exp(-1j * phase)
+    return new_eivecs
