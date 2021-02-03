@@ -53,7 +53,8 @@ t, J, t2 = 1.0, 1.7, 0.2
 mag_mode = "coplanar"
 path = toy.init_kagome_model(t, J, t2, mag_mode)
 Sim = stb.Simulation_TB(path)
-Sim.set_fermi_lvl()
+# Sim.set_fermi_lvl()
+Sim.Ef = -2.7535904054700566
 conductivity = {"s": Sim.spin_conductivity, "c": Sim.charge_conductivity}[mode]
 
 # Calculation of spin conductivity
