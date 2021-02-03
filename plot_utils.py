@@ -42,20 +42,19 @@ def int2cart(number_components):
                 String representing the component
             in cartesian coordinates.
     """
-    n1, n2, n3 = number_components
     comp_dict = {0: "x", 1: "y", 2: "z"}
-    x = comp_dict[n1]
-    y = comp_dict[n2]
-    z = comp_dict[n3]
-    return x, y, z
+    cart_comp = []
+    for n in number_components:
+        cart_comp.append(comp_dict[n])
+    return cart_comp
 
 
 def sigma_s_label(number_components):
     """
-    This function creates a label for spin conductivities.
+    This function creates a label for spin(charge) conductivities.
     Parameters:
     -----------
-        number_components: (tuple of 3 ints)
+        number_components: (tuple of 3(2) ints)
             Integers representing cartesian components.
     Returns:
     --------
@@ -64,7 +63,14 @@ def sigma_s_label(number_components):
             conductivity tensor.
     """
     cart_comp = int2cart(number_components)
-    str_x1 = "{" + cart_comp[0] + "}"
-    str_x2x3 = "{" + cart_comp[1] + cart_comp[2] + "}"
-    label = fr"$\sigma^{str_x1}_{str_x2x3}$"
+    n = len(cart_comp)
+    if n == 3:
+        str_x1 = "{" + cart_comp[0] + "}"
+        str_x2x3 = "{" + cart_comp[1] + cart_comp[2] + "}"
+        label = fr"$\sigma^{str_x1}_{str_x2x3}$"
+    elif n == 2:
+        str_x1x2 = "{" + cart_comp[0] + cart_comp[1] + "}"
+        label = fr"$\sigma_{str_x1x2}$"
+    else:
+        raise Exception("number_components should have lenght 3 or 2")
     return label
