@@ -125,7 +125,7 @@ def fix_gauge_eigenvector(eivecs):
     Parameters:
     ----------
         eivecs: (np.ndarray, shape (n,n))
-            eivecs[i, n] is the i-component
+            eivecs[n, i] is the i-component
             of the n-eigenvetor.
     Returns:
     --------
@@ -136,6 +136,6 @@ def fix_gauge_eigenvector(eivecs):
     n = np.shape(eivecs)[0]
     new_eivecs = np.copy(eivecs)
     for i in range(n):
-        phase = np.angle(eivecs[0, i])
-        new_eivecs[:, i] = eivecs[:, i] * np.exp(-1j * phase)
+        phase = np.angle(eivecs[i, 0])
+        new_eivecs[i, :] = eivecs[i, :] * np.exp(-1j * phase)
     return new_eivecs
