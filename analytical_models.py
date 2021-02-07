@@ -78,8 +78,16 @@ class Rashba_model():
         return [vx, vy]
 
     def solve_one(self, kx, ky, eig_vectors=False, reshape=False, fix_gauge=True):
+        """
+        Diagonalize Hamiltonian for a given k-points.
+        Eigenvetors are returned in format:
+            eivecs[band, spin_component]
+        """
         H = self.hamiltonian(kx, ky)
         diagonalization = la.eigh(H, eigvals_only=not(eig_vectors))
+        if eig_vectors:
+            eivals, eivecs = diagonalization
+            diagonalization = eivals, eivecs.T
         if eig_vectors and fix_gauge:
             eivals, eivecs = diagonalization
             eivecs = bzu.fix_gauge_eigenvector(eivecs)
