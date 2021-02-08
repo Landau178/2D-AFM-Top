@@ -458,7 +458,7 @@ class Simulation_TB():
             grad_H[i] = (H_i - H0) / eps
         return grad_H
 
-    def velocity_operator(self, kpt):
+    def velocity_operator_old(self, kpt):
         """
         Calculate the velocity operator as the k-gradient
         of the Hamiltonian.
@@ -473,9 +473,32 @@ class Simulation_TB():
         v[1] = grad_H[0] * M[0, 1] + grad_H[1] * M[1, 1]
         return v
 
+    def velocity_operator(self, kpt):
+        """
+        """
+        kpt = np.array(kpt)
+        norb, ns = len(self.orb), self.nspin
+        v = np.zeros((2, norb, ns, norb, ns), dtype="complex")
+        for hop in self.hoppings:
+            n1, n2, i, j, h = hop
+            R = np.array([n1, n2])
+            ri = np.array(self.orb[i])[0:2]
+            rj = np.array(self.orb[j])[0:2]
+            dr = R + rj - ri
+            r_real = dr[0] * self.lat[0] + dr[1]*self.lat[1]
+            kr = 2 * np.pi * kpt @ dr
+            exp = np.exp(1j * kr)
+            h_matrix = bzu.pauli_vector(h)*exp
+            for x in range(2):
+                v[x, i, :, j, :] += 1j * r_real[x] * h_matrix
+                v[x, j, :, i, :] += -1j * r_real[x] * h_matrix.T.conjugate()
+        return v
+
+
 # -----------------------------------------------------------------------------
 # Spin conductivities
 # -----------------------------------------------------------------------------
+
 
     def spin_conductivity_k(self, k1, k2, i, a, b, Gamma):
         """
@@ -537,6 +560,7 @@ class Simulation_TB():
 # -----------------------------------------------------------------------------
 # Charge conductivities
 # -----------------------------------------------------------------------------
+
 
     def charge_conductivity_k(self, k1, k2, a, b, Gamma):
         """
@@ -647,6 +671,7 @@ class Simulation_TB():
 # Operators in regular k-grid
 # -----------------------------------------------------------------------------
 
+
     def create_wf_grid(self, nk):
         self.wf_BZ = pytb.wf_array(self.model, [nk, nk])
         self.wf_BZ.solve_on_grid([0, 0])
@@ -658,6 +683,7 @@ class Simulation_TB():
 # -----------------------------------------------------------------------------
 # Private methods for reading hopping file.
 # -----------------------------------------------------------------------------
+
 
     def __add_hopping_from_line(self, line, mode="set"):
         """
@@ -747,7 +773,7 @@ class Simulation_TB():
             self.hoppings.append([0, 0, i, i, hop_sim])
         else:
             hop = (n1, n2, i, j, h)
-            self.hoppings.append([n1, n2, i, j, h, 0, 0, 0])
+            self.hoppings.append([n1, n2, i, j, hop_sim])
         return hop, is_onsite
 
     def __reformat_line(self, line):
