@@ -211,3 +211,90 @@ def create_path_rashba_model(folder, alpha, B=0, th=0, phi=0, lamb=0):
     path += str_params
     toy.mk_dir(path)
     return pathlib.Path(path)
+
+
+class Analytical_Rashba_model():
+    """
+    This class groups some analytical results in the model defined by the
+    Rashba Hamiltonian (eq. 24 of [1].
+    """
+
+    def __init__(self, alpha, B, phi):
+        self.A = 3 / 0.32
+        self.alpha = alpha
+        self.B = B
+        self.phi = phi
+        self.kd = B/alpha
+        self.kd_v = self.kd * np.array([-np.sin(phi), np.cos(phi)])
+
+    def polar_coord(self, kx, ky):
+        k = np.sqrt(kx**2 + ky**2)
+        phi_k = np.arctan2(ky, kx)
+        return k, phi_k
+
+    def q(self, kx, ky):
+        """
+        Distance from k-point from the Dirac cone.
+        """
+        q = np.sqrt((kx-self.kd_v[0])**2 + (ky-self.kd_v[1])**2)
+        return q
+
+    def rashba_energy(self, kx, ky):
+        """
+        Analytical spectrum of rashba Hamiltonian.
+        """
+        E_kin = 0.5*self.A * (kx**2 + ky**2)
+        E_rash = self.alpha * self.q(kx, ky)
+        return np.array([E_kin-E_rash, E_kin + E_rash])
+
+    def omega_x(self, kx, ky):
+        """
+        x-component of spin current vorticity.
+        """
+        q = self.q(kx, ky)
+        k_cross_kd = kx * self.kd_v[1]-ky*self.kd_v[0]
+        term1 = k_cross_kd * (ky - self.kd_v[1])/q**3
+        term2 = kx / q
+        return 0.5*self.A * (term1 + term2)
+
+    def omega_y(self, kx, ky):
+        """
+        y-component of spin current vorticity.
+        """
+        q = self.q(kx, ky)
+        k_cross_kd = kx * self.kd_v[1]-ky*self.kd_v[0]
+        term1 = k_cross_kd * (-kx + self.kd_v[0])/q**3
+        term2 = ky / q
+        return 0.5 * self.A * (term1 + term2)
+
+    def chi_k(self, kx, ky):
+        """
+        Unitary complex function which appears in eigenvetors.
+        """
+        k, phi_k = self.polar_coord(kx, ky)
+        q = self.q(kx, ky)
+        chi = -1j * k * np.exp(-1j*phi_k) + self.kd * np.exp(-1j * self.phi)
+        chi = chi / q
+        return chi
+
+    def spin_current_exp_val(self, kx, ky, i, a, band):
+        """
+        Expectation value <kn| J^i_a | kn>,
+        where "i" labels the spin component and
+        "a" is the velocity component.
+        Parameters:
+        -----------
+            kx, ky: (float, float)
+                Wave vector components.
+            i, a, band: (int, int int)
+                Each one can be 0 or 1,
+                the are the spin, velocity and
+                band components respectively.
+        """
+        k_a = {0: kx, 1: ky}[a]
+        sign_band = {0: -1, 1: 1}[band]
+        spin_sign = {0: 1, 1: -1}[i]
+        f = {0: np.real, 1: np.imag}[i]
+        chi = spin_sign * f(self.chi_k(kx, ky))
+        j = 0.5 * self.A * sign_band * k_a * chi
+        return j
