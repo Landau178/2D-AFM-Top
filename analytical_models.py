@@ -212,6 +212,10 @@ def create_path_rashba_model(folder, alpha, B=0, th=0, phi=0, lamb=0):
     toy.mk_dir(path)
     return pathlib.Path(path)
 
+# -----------------------------------------------------------------------------
+# Pure analytical results in Rashba model.
+# -----------------------------------------------------------------------------
+
 
 class Analytical_Rashba_model():
     """
