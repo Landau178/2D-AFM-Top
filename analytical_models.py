@@ -185,7 +185,7 @@ class Rashba_model():
             n: (int)
                 band index
         """
-        dk = 1e-6
+        dk = 1e-5
         j0_x = self.spin_current(kx, ky, n, i, 0)
         j0_y = self.spin_current(kx, ky, n, i, 1)
         jdx_y = self.spin_current(kx + dk, ky, n, i, 1)
