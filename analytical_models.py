@@ -251,25 +251,27 @@ class Analytical_Rashba_model():
         E_rash = self.alpha * self.q(kx, ky)
         return np.array([E_kin-E_rash, E_kin + E_rash])
 
-    def omega_x(self, kx, ky):
+    def omega_x(self, kx, ky, band):
         """
         x-component of spin current vorticity.
         """
+        sgn_band = {0: -1, 1: 1}[band]
         q = self.q(kx, ky)
         k_cross_kd = kx * self.kd_v[1]-ky*self.kd_v[0]
         term1 = k_cross_kd * (ky - self.kd_v[1])/q**3
         term2 = kx / q
-        return 0.5*self.A * (term1 + term2)
+        return sgn_band * 0.5*self.A * (term1 + term2)
 
-    def omega_y(self, kx, ky):
+    def omega_y(self, kx, ky, band):
         """
         y-component of spin current vorticity.
         """
+        sgn_band = {0: -1, 1: 1}[band]
         q = self.q(kx, ky)
         k_cross_kd = kx * self.kd_v[1]-ky*self.kd_v[0]
         term1 = k_cross_kd * (-kx + self.kd_v[0])/q**3
         term2 = ky / q
-        return 0.5 * self.A * (term1 + term2)
+        return sgn_band * 0.5 * self.A * (term1 + term2)
 
     def chi_k(self, kx, ky):
         """
