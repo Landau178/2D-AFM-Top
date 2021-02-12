@@ -29,7 +29,7 @@ class Rashba_model():
         self.alpha = alpha
         self.set_Zeeman(B, th, phi)
         self.lamb = lamb
-        self.path = path
+        self.path = pathlib.Path(path).absolute()
 
     def set_Zeeman(self, B, th, phi):
         self.B = B
