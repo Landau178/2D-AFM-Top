@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def set_ticks_on_ax(ax, ticks, fs=15, axis="x"):
     """
     Set the ticks on y-axis.
