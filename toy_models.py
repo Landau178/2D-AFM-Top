@@ -20,7 +20,8 @@ import bz_utilities as bzu
 # IMPORTANT:
 # On this path the simulations are saved, modify this line
 # before using this module.
-ROOT_DIR = "/home/orion178/Escritorio/Investigacion/2D-AFM-Top/"
+#ROOT_DIR = "/home/orion178/Escritorio/Investigacion/2D-AFM-Top/"
+ROOT_DIR = "/home/orion178/Desktop/Projects_Rodrigo/"
 
 
 def mk_dir(dir):
