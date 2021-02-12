@@ -32,6 +32,7 @@ class Rashba_model():
         self.path = path
 
     def set_Zeeman(self, B, th, phi):
+        self.B = B
         nx = np.sin(th) * np.cos(phi)
         ny = np.sin(th) * np.sin(phi)
         nz = np.cos(th)
@@ -200,7 +201,7 @@ def create_path_rashba_model(folder, alpha, B=0, th=0, phi=0, lamb=0):
     """
     """
     str_a = toy.float2str(alpha)
-    str_B = toy.float2str(alpha)
+    str_B = toy.float2str(B)
     str_th = toy.float2str(th)
     str_phi = toy.float2str(phi)
     str_lamb = toy.float2str(lamb)
