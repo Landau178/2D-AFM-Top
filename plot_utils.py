@@ -74,3 +74,24 @@ def sigma_s_label(number_components):
     else:
         raise Exception("number_components should have lenght 3 or 2")
     return label
+
+
+def normalize_data(data, vmin=-1, vmax=1):
+    """
+    Normalize data, making a linar map into the interval vmin, vmax.
+
+    Parameters:
+    -----------
+        vmin: (float, default is -1)
+            Min value of new normalized data.
+        vmax: (float, default is 1)
+            Max value of normalized data.
+    Rertunrs:
+        norm_data: (np.ndarray, same shape as data)
+            Normalized data.
+
+    """
+    data_min = np.min(data)
+    data_max = np.max(data)
+    norm_data = vmin + (vmax-vmin) * (data-data_min) / (data_max-data_min)
+    return norm_data
