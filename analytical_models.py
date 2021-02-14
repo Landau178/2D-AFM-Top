@@ -148,7 +148,29 @@ class Rashba_model():
             eivals, eivecs, v, Ef, i, a, b, Gamma)
         return sigma_k
 
-    def spin_conductivity(self, Ef, i, a, b, Gamma, kmax=10):
+    def spin_conductivity(self, Ef, component, nk=200, Gamma=12.7e-3,
+                          integrate=True):
+        """
+        Calculate the spin conductivity integrating ina regular k-grid.
+        """
+        kx_min, kx_max, ky_min, ky_max = limits_k_occup(
+            Ef, self.alpha, self.B, 0, factor=1.5)
+        kkx = np.linspace(kx_min, kx_max, nk)
+        kky = np.linspace(ky_min, ky_max, nk)
+        kx, ky = np.meshgrid(kkx, kky)
+        s_cond = np.zeros_like(kx)
+        for x in range(nk):
+            for y in range(nk):
+                s_cond[x, y] = self.spin_conductivity_k(
+                    kx[x, y], ky[x, y], Ef, *component, Gamma)
+        if integrate:
+            integ_s_cond = integ.simps(
+                [integ.simps(s_cond_1d, kky) for s_cond_1d in s_cond], kkx)
+        else:
+            integ_s_cond = s_cond
+        return integ_s_cond
+
+    def spin_conductivity_quad(self, Ef, i, a, b, Gamma, kmax=10):
         opts = {"epsabs": 1e-5}
         ranges = [[-kmax, kmax], [-kmax, kmax]]
         args = (Ef, i, a, b, Gamma)
@@ -212,6 +234,51 @@ def create_path_rashba_model(folder, alpha, B=0, th=0, phi=0, lamb=0):
     path += str_params
     toy.mk_dir(path)
     return pathlib.Path(path)
+
+
+# -----------------------------------------------------------------------------
+# Not completely tested functions to decide the size
+# of the integratio area in k-space
+# in the Rashba model.
+# -----------------------------------------------------------------------------
+
+
+def k_fermi(Ef, alpha, B, signs=(-1, -1, 1)):
+    s1, s2, s3 = signs
+    A = 3 / 0.32
+    kd = B / alpha
+    kmin = alpha / A
+    discr = 1+2*(Ef/(alpha*kmin) + s3*kd/kmin)
+    if discr < 0:
+        s1, s2, s3 = (1, 1, 1)
+        discr = 1+2*(Ef/(alpha*kmin) + s3*kd/kmin)
+    factor = (s1 + s2*np.sqrt(discr))
+    return kmin * factor
+
+
+def limits_k_occup(Ef, alpha, B, band, factor=1.1):
+    signs = {
+        0: ((-1, -1, 1), (1, 1, -1)),
+        1: ((1, -1, -1), (-1, 1, 1))}[band]
+    sign1, sign2 = signs
+    k1 = k_fermi(Ef, alpha, B, signs=sign1)
+    k2 = k_fermi(Ef, alpha, B, signs=sign2)
+    # print(k1,k2)
+    center = 0.5*(k1+k2)
+    diameter = np.abs(k2-k1)*factor
+    kx_min, kx_max = -diameter/2, diameter/2
+    ky_min, ky_max = center - diameter/2, center + diameter/2
+    limits = (kx_min, kx_max, ky_min, ky_max)
+    A = 3 / 0.32
+    e_d = 0.5*A * (B/alpha)**2
+    e_min = - 0.5 * alpha**2 / A - B
+    if band == 1 and Ef < e_d:
+        limits = (-1, 1, -1, 1)
+    if band == 0 and Ef < e_min:
+        limits = (-1, 1, -1, 1)
+    return limits
+# -----------------------------------------------------------------------------
+
 
 # -----------------------------------------------------------------------------
 # Pure analytical results in Rashba model.
