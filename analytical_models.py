@@ -10,6 +10,7 @@ import scipy.linalg as la
 import bz_utilities as bzu
 import linear_response as lr
 import toy_models as toy
+import plot_utils as pltu
 
 # References
 # ----------
@@ -177,6 +178,38 @@ class Rashba_model():
         result, abserr = integ.nquad(self.spin_conductivity_k, ranges, args=args,
                                      opts=opts)
         return result, abserr
+# -----------------------------------------------------------------------------
+# Methods for calculating spin conductivity as funcion of Ef
+# -----------------------------------------------------------------------------
+
+    def spin_conductivity_vs_Ef(self, component, Gamma, nE=50, nk=200):
+        Ef_arr = np.linspace(-0.3, 0.3, nE)
+        s_cond = np.zeros_like(Ef_arr)
+        for i in range(nE):
+            Ef = Ef_arr[i]
+            s_cond[i] = self.spin_conductivity(
+                Ef, component, nk=nk, Gamma=Gamma)
+        dir_Ef, dir_s_cond = self.directory_s_cond(component, Gamma)
+        np.save(dir_s_cond, s_cond)
+        np.save(dir_Ef, Ef_arr)
+        return Ef_arr, s_cond
+
+    def load_spin_conductivity_vs_Ef(self, component, Gamma):
+        dir_Ef, dir_s_cond = self.directory_s_cond(component, Gamma)
+        s_cond = np.load(dir_s_cond)
+        Ef_arr = np.load(dir_Ef)
+        return Ef_arr, s_cond
+
+    def directory_s_cond(self, component, Gamma):
+        cart_comp = pltu.int2cart(component)
+        str_comp = cart_comp[0]+cart_comp[1]+cart_comp[2]
+        str_G = np.round(Gamma*1e3, decimals=2)
+        ending = "Gamma={}meV.npy".format(str_G)
+        dir_cond = self.path / "sigma_{}".format(str_comp)
+        dir_s_cond = dir_cond / "s_cond_{}_{}".format(str_comp, ending)
+        dir_Ef = dir_cond / "Ef_arr_{}".format(ending)
+        return dir_Ef, dir_s_cond
+
 
 # -----------------------------------------------------------------------------
 # Method for calculating spin current expectation value and its vorticity.
