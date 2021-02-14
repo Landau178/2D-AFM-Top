@@ -52,7 +52,7 @@ def int2cart(number_components):
     return cart_comp
 
 
-def sigma_s_label(number_components):
+def sigma_s_label(number_components, extra_sup=""):
     """
     This function creates a label for spin(charge) conductivities.
     Parameters:
@@ -68,7 +68,7 @@ def sigma_s_label(number_components):
     cart_comp = int2cart(number_components)
     n = len(cart_comp)
     if n == 3:
-        str_x1 = "{" + cart_comp[0] + "}"
+        str_x1 = "{" + cart_comp[0] + extra_sup + "}"
         str_x2x3 = "{" + cart_comp[1] + cart_comp[2] + "}"
         label = fr"$\sigma^{str_x1}_{str_x2x3}$"
     elif n == 2:
