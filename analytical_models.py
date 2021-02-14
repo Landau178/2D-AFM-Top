@@ -271,7 +271,7 @@ def create_path_rashba_model(folder, alpha, B=0, th=0, phi=0, lamb=0):
 
 # -----------------------------------------------------------------------------
 # Not completely tested functions to decide the size
-# of the integratio area in k-space
+# of the integration area in k-space
 # in the Rashba model.
 # -----------------------------------------------------------------------------
 
