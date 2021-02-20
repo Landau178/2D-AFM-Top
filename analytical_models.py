@@ -145,7 +145,15 @@ class Rashba_model():
         """
         eivals, eivecs = self.solve_one(kx, ky, eig_vectors=True, reshape=True)
         v = self.velocity_operator(kx, ky)
-        sigma_k = lr.spin_conductivity_k(
+        spin_cond_function = {
+            "zelezny": lr.spin_conductivity_k,
+            "zelezny_intra": lr.spin_conductivity_k_zelezny_intra,
+            "zelezny_inter": lr.spin_conductivity_k_zelezny_inter,
+            "mook": lr.spin_conductivity_k_mook,
+            "mook_intra": lr.spin_conductivity_k_mook_intra,
+            "mook_inter": lr.spin_conductivity_k_mook_inter
+        }[self.mode_s_cond]
+        sigma_k = spin_cond_function(
             eivals, eivecs, v, Ef, i, a, b, Gamma)
         return sigma_k
 
@@ -155,7 +163,7 @@ class Rashba_model():
         Calculate the spin conductivity integrating ina regular k-grid.
         """
         kx_min, kx_max, ky_min, ky_max = limits_k_occup(
-            Ef, self.alpha, self.B, 0, factor=1.5)
+            Ef, self.alpha, self.B, 0, factor=1.7)
         kkx = np.linspace(kx_min, kx_max, nk)
         kky = np.linspace(ky_min, ky_max, nk)
         kx, ky = np.meshgrid(kkx, kky)
