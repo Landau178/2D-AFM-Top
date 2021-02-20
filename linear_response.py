@@ -11,7 +11,10 @@ import sim_tb as stb
 # [1] Spin-Polarized Current in Noncollinear Antiferromagnets,
 #     PRL119,187204 (2017)
 #     DOI: 10.1103/PhysRevLett.119.187204
-
+# [2] Origin of the magnetic spin Hall effect:
+#     Spin current vorticity in the Fermi sea
+#     Physical Rreview R 2, 023065 (2020)
+#       DOI: 10.1103/PhysRevResearch.2.023065
 # -----------------------------------------------------------------------------
 # Spin conduictivities, odd and even.
 # -----------------------------------------------------------------------------
@@ -61,6 +64,119 @@ def spin_conductivity_k(eivals, eivecs, velocity, Ef, i, a, b, Gamma):
     sigma_k = np.einsum("n, nm, m, mn->", gE, js, gE, v_eig[b])
     sigma_k = - np.real(sigma_k) * Gamma**2 / np.pi
     return sigma_k
+
+
+def spin_conductivity_k_zelezny_intra(eivals, eivecs, velocity, Ef, i, a, b, Gamma):
+    S = bzu.pauli_matrix(i) / 2
+    S_eig = np.einsum("nis, st, mit-> nm", eivecs.conj(), S, eivecs)
+    vx_eig = np.einsum("nis, isjd, mjd-> nm",
+                       eivecs.conj(), velocity[0], eivecs)
+    vy_eig = np.einsum("nis, isjd, mjd-> nm",
+                       eivecs.conj(), velocity[1], eivecs)
+    v_eig = [vx_eig, vy_eig]
+    js = 0.5 * (S_eig @ v_eig[a] + v_eig[a] @ S_eig)
+
+    gE = 1. / ((Ef-eivals)**2 + Gamma**2)
+    sigma_k = 0
+    for n in range(np.size(eivals)):
+        sigma_k -= gE[n]**2 * js[n, n]*v_eig[b][n, n]
+    sigma_k = np.real(sigma_k) * Gamma**2 / np.pi
+    return sigma_k
+
+
+def spin_conductivity_k_zelezny_inter(eivals, eivecs, velocity, Ef, i, a, b, Gamma):
+    S = bzu.pauli_matrix(i) / 2
+    S_eig = np.einsum("nis, st, mit-> nm", eivecs.conj(), S, eivecs)
+    vx_eig = np.einsum("nis, isjd, mjd-> nm",
+                       eivecs.conj(), velocity[0], eivecs)
+    vy_eig = np.einsum("nis, isjd, mjd-> nm",
+                       eivecs.conj(), velocity[1], eivecs)
+    v_eig = [vx_eig, vy_eig]
+    js = 0.5 * (S_eig @ v_eig[a] + v_eig[a] @ S_eig)
+
+    gE = 1. / ((Ef-eivals)**2 + Gamma**2)
+    sigma_k = 0
+    for n in range(np.size(eivals)):
+        for m in range(np.size(eivals)):
+            if not(n == m):
+                sigma_k -= gE[n] * gE[m] * js[n, m]*v_eig[b][m, n]
+    sigma_k = np.real(sigma_k) * Gamma**2 / np.pi
+    return sigma_k
+
+
+def spin_conductivity_k_mook(eivals, eivecs, velocity, Ef, i, a, b, Gamma):
+    """
+    Same as spin_conductivity_k, but using the definittion of Mook2020 [2].
+    """
+    nband = np.size(eivals)
+    S = bzu.pauli_matrix(i) / 2
+    S_eig = np.einsum("nis, st, mit-> nm", eivecs.conj(), S, eivecs)
+    vx_eig = np.einsum("nis, isjd, mjd-> nm",
+                       eivecs.conj(), velocity[0], eivecs)
+    vy_eig = np.einsum("nis, isjd, mjd-> nm",
+                       eivecs.conj(), velocity[1], eivecs)
+    v_eig = [vx_eig, vy_eig]
+    js = 0.5 * (S_eig @ v_eig[a] + v_eig[a] @ S_eig)
+    sigma_k = 0
+    for n in range(nband):
+        for m in range(nband):
+            if not(n == m):
+                f_n = bzu.fermi_dist(eivals[n], Ef)
+                f_m = bzu.fermi_dist(eivals[m], Ef)
+                factor = -Gamma*(f_m-f_n) / (eivals[n]-eivals[m])
+                denominator = (eivals[n]-eivals[m])**2 + Gamma**2
+                sigma_k += factor / denominator * js[n, m]*v_eig[b][m, n]
+            else:  # ill-defined term
+                s = Gamma
+                df = -s/np.pi / ((eivals[n]-Ef)**2 + s**2)
+                sigma_k += js[n, n]*v_eig[b][n, n] * df / Gamma
+    return np.real(sigma_k)
+
+
+def spin_conductivity_k_mook_intra(eivals, eivecs, velocity, Ef, i, a, b, Gamma):
+    """
+    Same as spin_conductivity_k, but using the definittion of Mook2020 [2].
+    """
+    nband = np.size(eivals)
+    S = bzu.pauli_matrix(i) / 2
+    S_eig = np.einsum("nis, st, mit-> nm", eivecs.conj(), S, eivecs)
+    vx_eig = np.einsum("nis, isjd, mjd-> nm",
+                       eivecs.conj(), velocity[0], eivecs)
+    vy_eig = np.einsum("nis, isjd, mjd-> nm",
+                       eivecs.conj(), velocity[1], eivecs)
+    v_eig = [vx_eig, vy_eig]
+    js = 0.5 * (S_eig @ v_eig[a] + v_eig[a] @ S_eig)
+    sigma_k = 0
+    for n in range(nband):
+        s = Gamma
+        df = -s/np.pi / ((eivals[n]-Ef)**2 + s**2)
+        sigma_k += js[n, n]*v_eig[b][n, n] * df / Gamma
+    return np.real(sigma_k)
+
+
+def spin_conductivity_k_mook_inter(eivals, eivecs, velocity, Ef, i, a, b, Gamma):
+    """
+    Same as spin_conductivity_k, but using the definittion of Mook2020 [2].
+    """
+    nband = np.size(eivals)
+    S = bzu.pauli_matrix(i) / 2
+    S_eig = np.einsum("nis, st, mit-> nm", eivecs.conj(), S, eivecs)
+    vx_eig = np.einsum("nis, isjd, mjd-> nm",
+                       eivecs.conj(), velocity[0], eivecs)
+    vy_eig = np.einsum("nis, isjd, mjd-> nm",
+                       eivecs.conj(), velocity[1], eivecs)
+    v_eig = [vx_eig, vy_eig]
+    js = 0.5 * (S_eig @ v_eig[a] + v_eig[a] @ S_eig)
+    sigma_k = 0
+    for n in range(nband):
+        for m in range(nband):
+            if not(n == m):
+                f_n = bzu.fermi_dist(eivals[n], Ef)
+                f_m = bzu.fermi_dist(eivals[m], Ef)
+                factor = -Gamma*(f_m-f_n) / (eivals[n]-eivals[m])
+                denominator = (eivals[n]-eivals[m])**2 + Gamma**2
+                sigma_k += factor / denominator * js[n, m]*v_eig[b][m, n]
+    return np.real(sigma_k)
 
 
 def spin_conductivity_k_even(eivals, eivecs, velocity, Ef, i, a, b):
