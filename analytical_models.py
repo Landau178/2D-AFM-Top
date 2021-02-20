@@ -31,6 +31,7 @@ class Rashba_model():
         self.set_Zeeman(B, th, phi)
         self.lamb = lamb
         self.path = pathlib.Path(path).absolute()
+        self.mode_s_cond = "zelezny"
 
     def set_Zeeman(self, B, th, phi):
         self.B = B
@@ -222,6 +223,7 @@ class Rashba_model():
 # -----------------------------------------------------------------------------
 # Method for calculating spin current expectation value and its vorticity.
 # -----------------------------------------------------------------------------
+
 
     def spin_current(self, kx, ky, n, i, a):
         eivecs = self.solve_one(kx, ky, eig_vectors=True,
