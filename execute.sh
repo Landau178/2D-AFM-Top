@@ -1,6 +1,6 @@
 #! /bin/bash
 
-opt_tr = "--tr even"
+opt_tr="--tr even"
 
 python3 exec_SHC.py -i 0 -a 1 -b 0 $opt_tr
 python3 exec_SHC.py -i 1 -a 0 -b 0 $opt_tr
