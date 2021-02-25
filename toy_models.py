@@ -21,7 +21,7 @@ import bz_utilities as bzu
 # On this path the simulations are saved, modify this line
 # before using this module.
 #ROOT_DIR = "/home/orion178/Escritorio/Investigacion/2D-AFM-Top/"
-ROOT_DIR = str(pathlib.Path.home() / "/Desktop/Projects_Rodrigo/Project_linear_response/")
+ROOT_DIR = pathlib.Path.home() / "/Desktop/Projects_Rodrigo/Project_linear_response/"
 
 
 def mk_dir(dir):
@@ -140,7 +140,7 @@ def create_path_toy_model(t, alpha, beta, h, folder=""):
     str_h = float2str(h)
     str_parameters = "t={}_alpha={}_beta={}_h={}/".format(
         str_t, str_alpha, str_beta, str_h)
-    path = ROOT_DIR + "saved_simulations/toy_model/{}".format(folder)
+    path = ROOT_DIR / "saved_simulations/toy_model/{}".format(folder)
     path += str_parameters
     mk_dir(path)
     return pathlib.Path(path)
@@ -230,7 +230,7 @@ def create_path_kagome_model(t, J, t2, mag_mode, folder=""):
             Parameters of model, see kagome_hoppings.
         folder: (str, default is "")
             Location of the simulation folder is:
-            pathlib.Path(ROOT_DIR + folder)
+            pathlib.Path(ROOT_DIR / folder)
 
     Returns:
     --------
@@ -243,7 +243,7 @@ def create_path_kagome_model(t, J, t2, mag_mode, folder=""):
 
     str_parameters = "t={}_J={}_t2={}_mag={}/".format(
         str_t, str_J, str_t2, mag_mode)
-    path = ROOT_DIR + "saved_simulations/toy_model/kagome/{}".format(folder)
+    path = ROOT_DIR / "saved_simulations/toy_model/kagome/{}".format(folder)
     path += str_parameters
     mk_dir(path)
     return pathlib.Path(path)
