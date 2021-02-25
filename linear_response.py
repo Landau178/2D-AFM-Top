@@ -67,6 +67,9 @@ def spin_conductivity_k(eivals, eivecs, velocity, Ef, i, a, b, Gamma):
 
 
 def spin_conductivity_k_zelezny_intra(eivals, eivecs, velocity, Ef, i, a, b, Gamma):
+    """
+    Same as spin_conductivity_k but only intraband contribution.
+    """
     S = bzu.pauli_matrix(i) / 2
     S_eig = np.einsum("nis, st, mit-> nm", eivecs.conj(), S, eivecs)
     vx_eig = np.einsum("nis, isjd, mjd-> nm",
@@ -85,6 +88,9 @@ def spin_conductivity_k_zelezny_intra(eivals, eivecs, velocity, Ef, i, a, b, Gam
 
 
 def spin_conductivity_k_zelezny_inter(eivals, eivecs, velocity, Ef, i, a, b, Gamma):
+    """
+    Same as spin_conductivity_k but only interband contribution.
+    """
     S = bzu.pauli_matrix(i) / 2
     S_eig = np.einsum("nis, st, mit-> nm", eivecs.conj(), S, eivecs)
     vx_eig = np.einsum("nis, isjd, mjd-> nm",
@@ -135,7 +141,8 @@ def spin_conductivity_k_mook(eivals, eivecs, velocity, Ef, i, a, b, Gamma):
 
 def spin_conductivity_k_mook_intra(eivals, eivecs, velocity, Ef, i, a, b, Gamma):
     """
-    Same as spin_conductivity_k, but using the definittion of Mook2020 [2].
+    Same as spin_conductivity_k, but using the definition of Mook2020 [2].
+    nly intraband contribution.
     """
     nband = np.size(eivals)
     S = bzu.pauli_matrix(i) / 2
@@ -156,7 +163,8 @@ def spin_conductivity_k_mook_intra(eivals, eivecs, velocity, Ef, i, a, b, Gamma)
 
 def spin_conductivity_k_mook_inter(eivals, eivecs, velocity, Ef, i, a, b, Gamma):
     """
-    Same as spin_conductivity_k, but using the definittion of Mook2020 [2].
+    Same as spin_conductivity_k, but using the definition of Mook2020 [2].
+    Only interband contribution.
     """
     nband = np.size(eivals)
     S = bzu.pauli_matrix(i) / 2
