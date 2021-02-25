@@ -141,7 +141,7 @@ def create_path_toy_model(t, alpha, beta, h, folder=""):
     str_parameters = "t={}_alpha={}_beta={}_h={}/".format(
         str_t, str_alpha, str_beta, str_h)
     path = ROOT_DIR / "saved_simulations/toy_model/{}".format(folder)
-    path += str_parameters
+    path = path / str_parameters
     mk_dir(path)
     return pathlib.Path(path)
 
@@ -244,7 +244,7 @@ def create_path_kagome_model(t, J, t2, mag_mode, folder=""):
     str_parameters = "t={}_J={}_t2={}_mag={}/".format(
         str_t, str_J, str_t2, mag_mode)
     path = ROOT_DIR / "saved_simulations/toy_model/kagome/{}".format(folder)
-    path += str_parameters
+    path = path / str_parameters
     mk_dir(path)
     return pathlib.Path(path)
 
