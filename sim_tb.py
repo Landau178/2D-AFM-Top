@@ -550,7 +550,7 @@ class Simulation_TB():
     def spin_conductivity_even(self, i, a, b):
         """
         """
-        opts = {"epsabs": 1e-5}
+        opts = {"epsabs": 1e-4}
         ranges = [[0, 1], [0, 1]]
         result, abserr = integ.nquad(self.spin_conductivity_k_even, ranges, args=(i, a, b),
                                      opts=opts)
@@ -598,7 +598,7 @@ class Simulation_TB():
         """
         BZ integration of the even charge conductivity.
         """
-        opts = {"epsabs": 1e-5}
+        opts = {"epsabs": 1e-4}
         ranges = [[0, 1], [0, 1]]
         result, abserr = integ.nquad(self.charge_conductivity_k_even, ranges,
                                      args=(a, b), opts=opts)
