@@ -21,7 +21,7 @@ import bz_utilities as bzu
 # On this path the simulations are saved, modify this line
 # before using this module.
 #ROOT_DIR = "/home/orion178/Escritorio/Investigacion/2D-AFM-Top/"
-ROOT_DIR = pathlib.Path.home() / "/Desktop/Projects_Rodrigo/Project_linear_response/"
+ROOT_DIR = pathlib.Path.home() / "Desktop/Projects_Rodrigo/Project_linear_response/"
 
 
 def mk_dir(dir):
@@ -245,8 +245,6 @@ def create_path_kagome_model(t, J, t2, mag_mode, folder=""):
         str_t, str_J, str_t2, mag_mode)
     path = ROOT_DIR / "saved_simulations/toy_model/kagome/{}".format(folder)
     path = path / str_parameters
-    print("This is ROOTDIR",ROOT_DIR)
-    print("This is path", path)
     mk_dir(path)
     return pathlib.Path(path)
 
