@@ -1,7 +1,8 @@
 #! /bin/bash
 
+opt_soc="--t2 $1"
 opt_tr="--tr even"
-opt_soc="--t2 0.0"
+
 
 program="python3 exec_conductivity.py $opt_tr $opt_soc"
 
