@@ -92,7 +92,7 @@ def even_conductivity_vs_Ef(Sim, mode, component):
 
 
 # Init the simulation
-t, J, t2 = 1.0, 1.7, 0.21
+t, J, t2 = 1.0, 1.7, 0.2
 mag_mode = "coplanar"
 path = toy.init_kagome_model(t, J, t2, mag_mode)
 Sim = stb.Simulation_TB(path)
