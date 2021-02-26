@@ -50,59 +50,19 @@ class Simulation_TB():
     def __init__(self, path):
         self.path = pathlib.Path(path).absolute()
         # self.save_config()
-        self.read_config_file()
+        self._read_config_file()
         self.init_folders()
         self.model = pytb.tb_model(self.dim_k, self.dim_r,
                                    lat=self.lat, orb=self.orb, nspin=self.nspin)
         self.hoppings = []
         for hop_file in self.hop_files:
-            self.read_hoppings(name=hop_file)
+            self._read_hoppings(name=hop_file)
 
     def init_folders(self):
         """
         Create some folders in the parent directory.
         """
         toy.mk_dir(self.path / "bands/")
-
-    def save_config(self):
-        """
-        Just for testing
-        """
-        a1 = [1, 0, 0]
-        a2 = [-1/2, np.sqrt(3)/2, 0]
-        a3 = [0, 0, 2/3]
-        lat = [a1, a2, a3]
-        orb = [[1/3, 1/6, 0],  # spin up
-               [5/6, 1/6, 0],  # spin down
-               [1/3, 2/3, 0],  # spin down
-               [5/6, 2/3, 0]]  # spin up
-        nspin = 2
-        k_spoints = [[0, 0], [1/3, 1/3], [0, 1/2], [-1/3, 2/3], [0, 0]]
-        k_sp_labels = ["$\\Gamma$", "$K$", "$M$", "$K'$", "$\\Gamma$"]
-        config = {"dim_k": 2, "dim_r": 3, "lat": lat,
-                  "orb": orb, "nspin": nspin, "Ne": 4, "k_spoints": k_spoints,
-                  "k_sp_labels": k_sp_labels}
-        with open(self.path / 'config.json', 'w') as fp:
-            json.dump(config, fp, sort_keys=True, indent=4)
-
-    def read_config_file(self):
-        """
-        Read the config file and set the corresponding atributes.
-        """
-        with open(self.path / 'config.json', 'r') as fp:
-            config = json.load(fp)
-        # print(config)
-        self.dim_k = config["dim_k"]
-        self.dim_r = config["dim_r"]
-        self.lat = np.array(config["lat"])
-        self.set_recip_lat()
-        self.orb = config["orb"]
-        self.nspin = config["nspin"]
-        self.nband = len(self.orb) * self.nspin
-        self.Ne = config["Ne"]
-        self.k_spoints = config["k_spoints"]
-        self.k_sp_labels = config["k_sp_labels"]
-        self.hop_files = config["hop_files"]
 
     def set_recip_lat(self):
         """
@@ -117,28 +77,6 @@ class Simulation_TB():
         b2 = factor * np.cross(a3, a1)
         b3 = factor * np.cross(a1, a2)
         self.rlat = np.array([b1, b2, b3])
-
-    def read_hoppings(self, name="hoppings.dat", mode="set"):
-        """
-        Read the hoppings of path/hoppings.dat,
-        and load them into the model.
-        More info in: self.__add_hopping_from_line
-
-        Parameters:
-        -----------
-            name: (str, default is "hoppings.dat")
-                name of the hopping file.
-            mode: (str, default is "set)
-                Mode to include hopping.
-                See __add_hopping_from_line
-
-        """
-        path_to_hops = self.path / name
-        with open(path_to_hops, 'r') as reader:
-            for line in reader:
-                if line[0] == "#":
-                    continue
-                self.__add_hopping_from_line(line, mode=mode)
 
     def plot_bands(self, ax, color="green", lw=3):
         """
@@ -215,7 +153,7 @@ class Simulation_TB():
 
     def create_bands_grid_red_coord(self, nk=10, return_eivec=True, endpoint=True):
         """
-        Creates a grid og the eivengavlues and eigenvectors in a grid
+        Creates a grid of the eivengavlues and eigenvectors in a grid
         (k1, k2), in such a wat that:
             k = k1 * b1 + k2 * b2
         with b1, b2, reciprocal lattice vectors.
@@ -499,7 +437,6 @@ class Simulation_TB():
 # Spin conductivities
 # -----------------------------------------------------------------------------
 
-
     def spin_conductivity_k(self, k1, k2, i, a, b, Gamma):
         """
         Note: This method needs the atribute self.Ef already set with the
@@ -560,7 +497,6 @@ class Simulation_TB():
 # -----------------------------------------------------------------------------
 # Charge conductivities
 # -----------------------------------------------------------------------------
-
 
     def charge_conductivity_k(self, k1, k2, a, b, Gamma):
         """
@@ -670,7 +606,6 @@ class Simulation_TB():
 # -----------------------------------------------------------------------------
 # Operators in regular k-grid
 # -----------------------------------------------------------------------------
-
 
     def create_wf_grid(self, nk):
         self.wf_BZ = pytb.wf_array(self.model, [nk, nk])
