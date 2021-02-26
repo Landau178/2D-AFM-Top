@@ -67,8 +67,6 @@ def odd_conductivity_vs_Gamma(Sim, mode, component):
 
     result = []
     for g in range(nG):
-        print("Iteration {}".format(g))
-        print("Using Gamma={}".format(gamma_arr[g]))
         args = (mode, component)
         result.append(Sim.conductivity_grid(*args, extra_arg=(gamma_arr[g])))
 
@@ -83,8 +81,6 @@ def even_conductivity_vs_Ef(Sim, mode, component):
     nE = np.size(Ef_arr)
     result = []
     for iE in range(nE):
-        print("Iteration {}".format(iE))
-        print("Using Ef={}".format(Ef_arr[iE]))
         Sim.Ef = Ef_arr[iE]
         args = (mode, component)
         result.append(Sim.conductivity_grid(*args))
