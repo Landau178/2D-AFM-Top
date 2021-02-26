@@ -104,6 +104,8 @@ Sim = stb.Simulation_TB(path)
 
 
 # Calculation of time-(even/odd) (spin/charge) conductivity
+nk = 201
+Sim.create_wf_grid(nk)
 
 if time_rev == "odd":
     Sim.Ef = -2.7535904054700566
