@@ -613,6 +613,44 @@ class Simulation_TB():
         self.nk = nk - 1
         self.create_bands_grid_red_coord(
             nk=self.nk, return_eivec=False, endpoint=False)
+        self.velocity_operator_grid()
+
+    def velocity_operator_grid(self):
+        """
+        Evaluates the velocity operator in the basis
+        of eigenstates, on a grid in the 1BZ.
+
+        """
+        nk = self.nk
+        norb = len(self.orb)
+        shape = (nk, nk, 2, norb, 2, norb, 2)
+        v_grid = np.zeros(shape, dtype="complex")
+        for i in range(nk):
+            for j in range(nk):
+                kpt = [i/nk, j/nk]
+                v_grid[i, j] = self.velocity_operator(kpt)
+        self.v_grid = v_grid
+
+    def conductivity_grid(self, mode, component, extra_arg=()):
+        k = np.linspace(0, 1, num=self.nk)
+        dk = k[1] - k[0]
+        other_args = (self.Ef, *component, *extra_arg)
+        integrator = {
+            "s_odd": lr.spin_conductivity_k,
+            "s_even": lr.spin_conductivity_k_even,
+            "c_odd": lr.charge_conductivity_k,
+            "c_even": lr.charge_conductivity_k_even}[mode]
+        integ = 0
+
+        for i1 in range(self.nk):
+            for i2 in range(self.nk):
+                eivals = self.red_bands_grid[i1, i2]
+                eivecs = self.red_eivecs_grid[i1, i2]
+                velocity = self.v_grid[i1, i2]
+                args_k = (eivals, eivecs, velocity)
+                integ += integrator(*args_k, *other_args)
+
+        return integ * dk**2
 
 
 # -----------------------------------------------------------------------------
