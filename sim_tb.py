@@ -684,6 +684,67 @@ class Simulation_TB():
 # Private methods for reading hopping file.
 # -----------------------------------------------------------------------------
 
+    def _read_hoppings(self, name="hoppings.dat", mode="set"):
+        """
+        Read the hoppings of path/hoppings.dat,
+        and load them into the model.
+        More info in: self.__add_hopping_from_line
+
+        Parameters:
+        -----------
+            name: (str, default is "hoppings.dat")
+                name of the hopping file.
+            mode: (str, default is "set)
+                Mode to include hopping.
+                See __add_hopping_from_line
+
+        """
+        path_to_hops = self.path / name
+        with open(path_to_hops, 'r') as reader:
+            for line in reader:
+                if line[0] == "#":
+                    continue
+                self.__add_hopping_from_line(line, mode=mode)
+
+    def save_config(self):
+        """
+        Just for testing
+        """
+        a1 = [1, 0, 0]
+        a2 = [-1/2, np.sqrt(3)/2, 0]
+        a3 = [0, 0, 2/3]
+        lat = [a1, a2, a3]
+        orb = [[1/3, 1/6, 0],  # spin up
+               [5/6, 1/6, 0],  # spin down
+               [1/3, 2/3, 0],  # spin down
+               [5/6, 2/3, 0]]  # spin up
+        nspin = 2
+        k_spoints = [[0, 0], [1/3, 1/3], [0, 1/2], [-1/3, 2/3], [0, 0]]
+        k_sp_labels = ["$\\Gamma$", "$K$", "$M$", "$K'$", "$\\Gamma$"]
+        config = {"dim_k": 2, "dim_r": 3, "lat": lat,
+                  "orb": orb, "nspin": nspin, "Ne": 4, "k_spoints": k_spoints,
+                  "k_sp_labels": k_sp_labels}
+        with open(self.path / 'config.json', 'w') as fp:
+            json.dump(config, fp, sort_keys=True, indent=4)
+
+    def _read_config_file(self):
+        """
+        Read the config file and set the corresponding atributes.
+        """
+        with open(self.path / 'config.json', 'r') as fp:
+            config = json.load(fp)
+        # print(config)
+        self.dim_k = config["dim_k"]
+        self.dim_r = config["dim_r"]
+        self.lat = np.array(config["lat"])
+        self.set_recip_lat()
+        self.orb = config["orb"]
+        self.nspin = config["nspin"]
+        self.nband = len(self.orb) * self.nspin
+        self.Ne = config["Ne"]
+        self.k_spoints = config["k_spoints"]
+        self.k_sp_labels = config["k_sp_labels"]
+        self.hop_files = config["hop_files"]
 
     def __add_hopping_from_line(self, line, mode="set"):
         """
