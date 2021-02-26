@@ -35,11 +35,14 @@ Parser.add("--tr", default="odd", action="store", type=str,
            help="If odd, calculates time-odd spin conductivity vs Gamma\
                if even, caculates time-even conductivity vs Ef")
 
+Parser.add("--t2", default=0.2, action="store", type=float, help="SOC parameter")
+
 
 options = Parser.parse_args()
 i = options.i
 a = options.a
 b = options.b
+t2 = options.t2
 time_rev = options.tr
 mode = options.mode
 concat = options.concat
@@ -49,6 +52,7 @@ component = {
     "c": (a, b)}[mode]
 
 cond_mode = mode + "_" + time_rev
+
 
 
 mssg_s = "Calculation of the component\
@@ -92,7 +96,7 @@ def even_conductivity_vs_Ef(Sim, mode, component):
 
 
 # Init the simulation
-t, J, t2 = 1.0, 1.7, 0.2
+t, J = 1.0, 1.7
 mag_mode = "coplanar"
 path = toy.init_kagome_model(t, J, t2, mag_mode)
 Sim = stb.Simulation_TB(path)
@@ -100,7 +104,7 @@ Sim = stb.Simulation_TB(path)
 
 
 # Calculation of time-(even/odd) (spin/charge) conductivity
-nk = 201
+nk = 501
 Sim.create_wf_grid(nk)
 
 if time_rev == "odd":
