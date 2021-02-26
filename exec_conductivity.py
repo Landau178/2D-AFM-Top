@@ -11,6 +11,7 @@ import bz_utilities as bzu
 import toy_models as toy
 import plot_utils as pltu
 import linear_response as lr
+import sim_tb_routines as stbr
 
 # -----------------------------------------------------------------------------
 # This script perform calculations of different components of
@@ -35,7 +36,8 @@ Parser.add("--tr", default="odd", action="store", type=str,
            help="If odd, calculates time-odd spin conductivity vs Gamma\
                if even, caculates time-even conductivity vs Ef")
 
-Parser.add("--t2", default=0.2, action="store", type=float, help="SOC parameter")
+Parser.add("--t2", default=0.2, action="store",
+           type=float, help="SOC parameter")
 
 
 options = Parser.parse_args()
@@ -53,7 +55,12 @@ component = {
 
 cond_mode = mode + "_" + time_rev
 
+# Workflow control
+cond_vs_Ef = True
+cond_vs_Gamma = False
 
+# only osed if cond_vs_Gamma and time_rev=="odd"
+Gamma = 20e-3
 
 mssg_s = "Calculation of the component\
      ({},{},{}) of the spin conductivity tensor.".format(i, a, b)
@@ -62,37 +69,6 @@ mssg_c = "Calculation of the component\
 mssg = {"s": mssg_s, "c": mssg_c}[mode]
 print(mssg)
 # -----------------------------------------------------------------------------
-
-
-def odd_conductivity_vs_Gamma(Sim, mode, component):
-    gamma_arr = np.concatenate(
-        (np.logspace(-3, 0, num=50), np.logspace(0, 1, num=11)[1::]))
-    nG = np.size(gamma_arr)
-
-    result = []
-    for g in range(nG):
-        args = (mode, component)
-        result.append(Sim.conductivity_grid(*args, extra_arg=(gamma_arr[g])))
-
-    integ_result = np.zeros((nG, 2))
-    integ_result[:, 0] = gamma_arr
-    integ_result[:, 1] = np.array(result)
-    return integ_result
-
-
-def even_conductivity_vs_Ef(Sim, mode, component):
-    Ef_arr = np.linspace(-4, 5, num=100)
-    nE = np.size(Ef_arr)
-    result = []
-    for iE in range(nE):
-        Sim.Ef = Ef_arr[iE]
-        args = (mode, component)
-        result.append(Sim.conductivity_grid(*args))
-
-    integ_result = np.zeros((nE, 2))
-    integ_result[:, 0] = Ef_arr
-    integ_result[:, 1] = np.array(result)
-    return integ_result
 
 
 # Init the simulation
@@ -107,34 +83,30 @@ Sim = stb.Simulation_TB(path)
 nk = 501
 Sim.create_wf_grid(nk)
 
-if time_rev == "odd":
+if cond_vs_Gamma:
     Sim.Ef = -2.7535904054700566
-    integ_result = odd_conductivity_vs_Gamma(Sim, cond_mode, component)
+    integ_result = stbr.odd_conductivity_vs_Gamma(Sim, cond_mode, component)
 
     path_result = {"s": Sim.path / "spin_conductivity/",
                    "c": Sim.path / "charge_conductivity/"}[mode]
     toy.mk_dir(path_result)
+    name = {
+        "s": "SHC_{}{}{}.npy".format(i, a, b),
+        "c": "CHC_{}{}.npy".format(a, b)}[mode]
+    # Saving result deleting any previous calculation
+    np.save(path_result / name, integ_result)
 
 
-elif time_rev == "even":
-    integ_result = even_conductivity_vs_Ef(Sim, cond_mode, component)
-    path_result = {
-        "s": Sim.path / "even_spin_conductivity_vs_Ef",
-        "c": Sim.path / "even_charge_conductivity_vs_Ef"}[mode]
-    toy.mk_dir(path_result)
+if cond_vs_Ef:
+    extra_arg = {"odd": Gamma, "even": ()}[time_rev]
+    stbr.conductivity_vs_Ef(
+        Sim, cond_mode, component, extra_arg=extra_arg)
 
-
-name = {
-    "s": "SHC_{}{}{}.npy".format(i, a, b),
-    "c": "CHC_{}{}.npy".format(a, b)}[mode]
 
 # Concatenate the new result to an existing one
 if concat:
     old_integ_result = np.load(path_result / name)
     integ_result = np.concatenate((old_integ_result, integ_result), axis=0)
-
-# Saving result deleting any previous calculation
-np.save(path_result / name, integ_result)
 
 
 print("")
