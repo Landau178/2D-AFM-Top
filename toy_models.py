@@ -340,6 +340,7 @@ def magnetic_texture_kagome(mode):
     Returns the magnetization texture in the Kagome
     lattice, according to the modes:
         1. coplanar
+        2. coplanar_b 2-fold-y spin rotation of 1.
 
     Parameters:
     -----------
@@ -354,12 +355,18 @@ def magnetic_texture_kagome(mode):
                 angles of site i.
 
     """
-    coplanar_texture = [
+    coplanar_texture = np.array([
         [np.pi/2, np.pi*(1/2 + 2/3)],
         [np.pi/2, np.pi*(1/2 + 4/3)],
         [np.pi/2, np.pi/2]
-    ]
+    ])
+    coplanar_b = np.array([
+        [np.pi/2, np.pi*(1/2 + 4/3)],
+        [np.pi/2, np.pi*(1/2 + 2/3)],
+        [np.pi/2, np.pi/2]
+    ])
     texture_dict = {
-        "coplanar": np.array(coplanar_texture)
+        "coplanar": coplanar_texture,
+        "coplanar_b": coplanar_b
     }
     return texture_dict[mode]
