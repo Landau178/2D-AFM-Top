@@ -612,7 +612,7 @@ class Simulation_TB():
         self.wf_BZ.solve_on_grid([0, 0])
         self.nk = nk - 1
         self.create_bands_grid_red_coord(
-            nk=self.nk, return_eivec=False, endpoint=False)
+            nk=self.nk, return_eivec=True, endpoint=False)
         self.velocity_operator_grid()
 
     def velocity_operator_grid(self):
