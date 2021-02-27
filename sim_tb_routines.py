@@ -161,7 +161,7 @@ def conductivity_vs_Ef(Sim, mode, component, extra_arg=()):
         Sim, mode, component, extra_arg=extra_arg, mkdir=True)
 
     # Saving result deleting any previous calculation
-    np.save(path_file)
+    np.save(path_file, integ_result)
 
 
 def load_cond_vs_Ef(Sim, mode, component, extra_arg=()):
