@@ -43,15 +43,21 @@ Parser.add("--load", action="store_true",
            help="Flag to determine if load the k-grid\
             instead of calculating it.")
 
+Parser.add("--mag_mode", default="coplanar", action="store",
+           type=str, help="mag_mode parameter for  Kagome lattice.")
+
 
 options = Parser.parse_args()
 i = options.i
 a = options.a
 b = options.b
 t2 = options.t2
+mag_mode = options.mag_mode
+
 time_rev = options.tr
 mode = options.mode
 concat = options.concat
+
 
 calc_kgrid = not(options.load)
 
@@ -79,7 +85,6 @@ print(mssg)
 
 # Init the simulation
 t, J = 1.0, 1.7
-mag_mode = "coplanar"
 path = toy.init_kagome_model(t, J, t2, mag_mode)
 Sim = stb.Simulation_TB(path)
 # Sim.set_fermi_lvl()
