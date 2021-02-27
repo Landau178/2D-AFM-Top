@@ -63,6 +63,7 @@ class Simulation_TB():
         Create some folders in the parent directory.
         """
         toy.mk_dir(self.path / "bands/")
+        toy.mk_dir(self.path / "k-grid/")
 
     def set_recip_lat(self):
         """
@@ -607,13 +608,23 @@ class Simulation_TB():
 # Operators in regular k-grid
 # -----------------------------------------------------------------------------
 
-    def create_wf_grid(self, nk):
-        self.wf_BZ = pytb.wf_array(self.model, [nk, nk])
-        self.wf_BZ.solve_on_grid([0, 0])
-        self.nk = nk - 1
+    def create_k_grid(self, nk):
+        #self.wf_BZ = pytb.wf_array(self.model, [nk, nk])
+        #self.wf_BZ.solve_on_grid([0, 0])
+        self.nk = nk
         self.create_bands_grid_red_coord(
             nk=self.nk, return_eivec=True, endpoint=False)
         self.velocity_operator_grid()
+        np.save(self.path / "k-grid/bands.npy", self.red_bands_grid)
+        np.save(self.path / "k-grid/eivecs.npy", self.red_eivecs_grid)
+        np.save(self.path / "k-grid/velocity.npy", self.v_grid)
+
+    def load_k_grid(self):
+        path = self.path / "k-grid/"
+        self.red_bands_grid = np.load(path / "bands.npy")
+        self.red_eivecs_grid = np.load(path / "eivecs.npy")
+        self.v_grid = np.load(path / "velocity.npy")
+        self.nk = np.shape(self.red_eivecs_grid)[0]
 
     def velocity_operator_grid(self):
         """

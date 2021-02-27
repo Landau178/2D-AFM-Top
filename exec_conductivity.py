@@ -39,6 +39,10 @@ Parser.add("--tr", default="odd", action="store", type=str,
 Parser.add("--t2", default=0.2, action="store",
            type=float, help="SOC parameter")
 
+Parser.add("--load", action="store_true",
+           help="Flag to determine if load the k-grid\
+            instead of calculating it.")
+
 
 options = Parser.parse_args()
 i = options.i
@@ -48,6 +52,8 @@ t2 = options.t2
 time_rev = options.tr
 mode = options.mode
 concat = options.concat
+
+calc_kgrid = not(options.load)
 
 component = {
     "s": (i, a, b),
@@ -81,7 +87,11 @@ Sim = stb.Simulation_TB(path)
 
 # Calculation of time-(even/odd) (spin/charge) conductivity
 nk = 501
-Sim.create_wf_grid(nk)
+
+if calc_kgrid:
+    Sim.create_k_grid(nk)
+else:
+    Sim.load_k_grid()
 
 if cond_vs_Gamma:
     Sim.Ef = -2.7535904054700566
