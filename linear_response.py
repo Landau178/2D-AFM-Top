@@ -20,6 +20,7 @@ import sim_tb as stb
 # -----------------------------------------------------------------------------
 
 
+# @profile
 def spin_conductivity_k(eivals, eivecs, velocity, Ef, i, a, b, Gamma):
     """
     Calculate the k-resolved odd spin conductivity at a given k-point,
@@ -187,6 +188,7 @@ def spin_conductivity_k_mook_inter(eivals, eivecs, velocity, Ef, i, a, b, Gamma)
     return np.real(sigma_k)
 
 
+# @profile
 def spin_conductivity_k_even(eivals, eivecs, velocity, Ef, i, a, b):
     """
     Calculate the k-resolved even spin conductivity at a given k-point,
@@ -239,6 +241,7 @@ def spin_conductivity_k_even(eivals, eivecs, velocity, Ef, i, a, b):
 # -----------------------------------------------------------------------------
 
 
+# @profile
 def charge_conductivity_k(eivals, eivecs, velocity, Ef, a, b, Gamma):
     """
     Same as self.spin_conductivity_k, but calculates
@@ -256,6 +259,7 @@ def charge_conductivity_k(eivals, eivecs, velocity, Ef, a, b, Gamma):
     return sigma_k
 
 
+# @profile
 def charge_conductivity_k_even(eivals, eivecs, velocity, Ef, a, b):
     """
     """
