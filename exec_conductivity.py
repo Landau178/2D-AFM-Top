@@ -46,7 +46,7 @@ Parser.add("--load", action="store_true",
 Parser.add("--mag_mode", default="coplanar", action="store",
            type=str, help="mag_mode parameter for  Kagome lattice.")
 
-Parser.add("--nk", default=300, action="store",
+Parser.add("--nk", default=500, action="store",
            type=int, help="Size of the k-grid")
 
 options = Parser.parse_args()
@@ -103,16 +103,8 @@ else:
 
 if cond_vs_Gamma:
     Sim.Ef = -2.7535904054700566
-    integ_result = stbr.odd_conductivity_vs_Gamma(Sim, cond_mode, component)
+    stbr.odd_conductivity_vs_Gamma(Sim, cond_mode, component)
 
-    path_result = {"s": Sim.path / "spin_conductivity/",
-                   "c": Sim.path / "charge_conductivity/"}[mode]
-    toy.mk_dir(path_result)
-    name = {
-        "s": "SHC_{}{}{}.npy".format(i, a, b),
-        "c": "CHC_{}{}.npy".format(a, b)}[mode]
-    # Saving result deleting any previous calculation
-    np.save(path_result / name, integ_result)
 
 
 if cond_vs_Ef:

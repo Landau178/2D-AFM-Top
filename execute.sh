@@ -1,7 +1,7 @@
 #! /bin/bash
 
 opt_soc="--t2 $1"
-opt_tr="--tr even"
+opt_tr="--tr odd"
 opt_mag="--mag_mode coplanar_b"
 
 program="python3 exec_conductivity.py $opt_tr $opt_soc $opt_mag"
