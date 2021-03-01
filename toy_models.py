@@ -22,7 +22,7 @@ import bz_utilities as bzu
 # before using this module.
 #ROOT_DIR = "/home/orion178/Escritorio/Investigacion/2D-AFM-Top/"
 ROOT_DIR = pathlib.Path.home(
-) / "Desktop/Projects_Rodrigo/Projects/1.Project_linear_response/"
+) / "Desktop/Projects_Rodrigo/Projects/1.Linear_response/"
 
 
 def mk_dir(dir):
