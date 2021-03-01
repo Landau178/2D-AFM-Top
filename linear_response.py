@@ -273,3 +273,97 @@ def charge_conductivity_k_even(eivals, eivecs, velocity, Ef, a, b):
             denominator = (eivals[n]-eivals[m])**2
             sigma_k += -2 * v_eig[a][n, m]*v_eig[b][m, n] / denominator
     return np.imag(sigma_k)
+
+
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# Upgrade of functions that accepts k-grid operators, and perform the integral
+# in k-space.
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+# Spin conductivity
+# ------------------------------------------------------------------------------
+# @profile
+def spin_conductivity_k_odd_upg(eivals, v_eig, js_eig, Ef, i, a, b, Gamma):
+    nk = np.shape(eivals)[0]
+    dk = 1 / nk
+    v_b = v_eig[b]
+    js = js_eig[i, a]
+
+    gE = 1. / ((Ef-eivals)**2 + Gamma**2)
+    sigma_k = np.einsum("kqn, kqnm, kqm, kqmn->kq", gE, js, gE, v_b)
+    sigma_k = - np.real(np.sum(sigma_k)) * Gamma**2 / np.pi
+    return sigma_k / dk**2
+
+
+# @profile
+def spin_conductivity_k_even_upg(eivals, v_eig, js_eig, Ef, i, a, b):
+    nk = np.shape(eivals)[0]
+    dk = 1 / nk
+    gap_denom = gap_denominator(eivals, Ef)
+    v_b = v_eig[b]
+    js = js_eig[i, a]
+    subscripts = "kqnm ,kqnm, kqmn->kq"
+    sigma_k = np.einsum(subscripts, js, gap_denom, v_b)
+    return -2 * np.imag(np.sum(sigma_k)) / dk**2
+
+# ------------------------------------------------------------------------------
+# Charge conductivity
+# ------------------------------------------------------------------------------
+
+
+def charge_conductivity_k_odd_upg(eivals, v_eig, Ef, a, b, Gamma):
+    nk = np.shape(eivals)[0]
+    dk = 1 / nk
+    v_b = v_eig[b]
+    v_a = v_eig[a]
+    gE = 1. / ((Ef-eivals)**2 + Gamma**2)
+    sigma_k = np.einsum("kqn, kqnm, kqm, kqmn->kq", gE, v_a, gE, v_b)
+    sigma_k = - np.real(np.sum(sigma_k)) * Gamma**2 / np.pi
+    return sigma_k / dk**2
+
+
+def charge_conductivity_k_even_upg(eivals, v_eig, Ef, a, b):
+    nk = np.shape(eivals)[0]
+    dk = 1 / nk
+    gap_denom = gap_denominator(eivals, Ef)
+    v_b = v_eig[b]
+    v_a = v_eig[a]
+    subscripts = "kqnm ,kqnm, kqmn->kq"
+    sigma_k = np.einsum(subscripts, v_a, gap_denom, v_b)
+    return -2 * np.imag(np.sum(sigma_k)) / dk**2
+
+# ------------------------------------------------------------------------------
+# Useful utility to calculate time-even integrands
+# ------------------------------------------------------------------------------
+
+
+def gap_denominator(eivals, Ef):
+    """
+    Calculate the matrix of components:
+        M_{nm} = f_n(1-f_m)/(E_n - E_m)**2 
+    If not(n==m) and 0 if n==m.
+
+    Parameters:
+    -----------
+        eivals: (np.ndarray, shape (nk, nk, nbands))
+            Grid in k-space of eivengalues
+
+    Returns:
+    --------
+        matrix: (np.ndarray of shape(nk, nk, nbands, nband))
+    """
+    fermi = bzu.fermi_dist(eivals, Ef)
+    nbands = np.shape(eivals)[-1]
+    nk = np.shape(eivals)[0]
+    matrix = np.zeros((nk, nk, nbands, nbands))
+    for n in range(nbands):
+        for m in range(nbands):
+            if not(n == m):
+                denom_nm = 1 / (eivals[:, :, n]-eivals[:, :, m])**2
+                fermi_factor = fermi[:, :, n] * (1-fermi[:, :, m])
+                matrix[:, :, n, m] = denom_nm * fermi_factor
+
+    return matrix
