@@ -46,6 +46,8 @@ Parser.add("--load", action="store_true",
 Parser.add("--mag_mode", default="coplanar", action="store",
            type=str, help="mag_mode parameter for  Kagome lattice.")
 
+Parser.add("--nk", default=300, action="store",
+           type=int, help="Size of the k-grid")
 
 options = Parser.parse_args()
 i = options.i
@@ -53,6 +55,7 @@ a = options.a
 b = options.b
 t2 = options.t2
 mag_mode = options.mag_mode
+nk = options.nk
 
 time_rev = options.tr
 mode = options.mode
@@ -91,7 +94,7 @@ Sim = stb.Simulation_TB(path)
 
 
 # Calculation of time-(even/odd) (spin/charge) conductivity
-nk = 501
+
 
 if calc_kgrid:
     Sim.create_k_grid(nk)
@@ -113,7 +116,7 @@ if cond_vs_Gamma:
 
 
 if cond_vs_Ef:
-    extra_arg = {"odd": Gamma, "even": ()}[time_rev]
+    extra_arg = {"odd": (Gamma,), "even": ()}[time_rev]
     stbr.conductivity_vs_Ef(
         Sim, cond_mode, component, extra_arg=extra_arg)
 
