@@ -21,7 +21,8 @@ import bz_utilities as bzu
 # On this path the simulations are saved, modify this line
 # before using this module.
 #ROOT_DIR = "/home/orion178/Escritorio/Investigacion/2D-AFM-Top/"
-ROOT_DIR = pathlib.Path.home() / "Desktop/Projects_Rodrigo/Project_linear_response/"
+ROOT_DIR = pathlib.Path.home(
+) / "Desktop/Projects_Rodrigo/Projects/1.Project_linear_response/"
 
 
 def mk_dir(dir):
