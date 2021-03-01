@@ -438,6 +438,7 @@ class Simulation_TB():
 # Spin conductivities
 # -----------------------------------------------------------------------------
 
+
     def spin_conductivity_k(self, k1, k2, i, a, b, Gamma):
         """
         Note: This method needs the atribute self.Ef already set with the
@@ -498,6 +499,7 @@ class Simulation_TB():
 # -----------------------------------------------------------------------------
 # Charge conductivities
 # -----------------------------------------------------------------------------
+
 
     def charge_conductivity_k(self, k1, k2, a, b, Gamma):
         """
@@ -614,19 +616,41 @@ class Simulation_TB():
         self.nk = nk
         self.create_bands_grid_red_coord(
             nk=self.nk, return_eivec=True, endpoint=False)
-        self.velocity_operator_grid()
+        self.velocity_operator_grid(eig_basis=True)
+        self.spin_operator_grid()
+        self.spin_current_grid()
+
         np.save(self.path / "k-grid/bands.npy", self.red_bands_grid)
         np.save(self.path / "k-grid/eivecs.npy", self.red_eivecs_grid)
         np.save(self.path / "k-grid/velocity.npy", self.v_grid)
+        np.save(self.path / "k-grid/velocity_eig.npy", self.v_grid_eig)
+        np.save(self.path / "k-grid/spin_eig.npy", self.S_eig_grid)
+        np.save(self.path / "k-grid/js_eig.npy", self.js_grid_eig)
 
+    # @profile
     def load_k_grid(self):
         path = self.path / "k-grid/"
         self.red_bands_grid = np.load(path / "bands.npy")
         self.red_eivecs_grid = np.load(path / "eivecs.npy")
         self.v_grid = np.load(path / "velocity.npy")
+        self.v_grid_eig = np.load(path / "velocity_eig.npy")
         self.nk = np.shape(self.red_eivecs_grid)[0]
+        self.S_eig_grid = np.load(path / "spin_eig.npy")
+        self.js_grid_eig = np.load(path / "js_eig.npy")
 
-    def velocity_operator_grid(self):
+    def spin_operator_grid(self):
+        eivecs = self.red_eivecs_grid
+        subscripts = "kqnis, st, kqmit-> kqnm"
+        nk = self.nk
+        nband = self.nband
+        shape = (3, nk, nk, nband, nband)
+        S_eig = np.zeros(shape, dtype="complex")
+        for i in range(3):
+            S = bzu.pauli_matrix(i) / 2
+            S_eig[i] = np.einsum(subscripts, eivecs.conj(), S, eivecs)
+        self.S_eig_grid = S_eig
+
+    def velocity_operator_grid(self, eig_basis=False):
         """
         Evaluates the velocity operator in the basis
         of eigenstates, on a grid in the 1BZ.
@@ -634,15 +658,36 @@ class Simulation_TB():
         """
         nk = self.nk
         norb = len(self.orb)
-        shape = (nk, nk, 2, norb, 2, norb, 2)
+        shape = (2, nk, nk, norb, 2, norb, 2)
         v_grid = np.zeros(shape, dtype="complex")
         for i in range(nk):
             for j in range(nk):
                 kpt = [i/nk, j/nk]
-                v_grid[i, j] = self.velocity_operator(kpt)
+                v_k = self.velocity_operator(kpt)
+                v_grid[0, i, j] = v_k[0]
+                v_grid[1, i, j] = v_k[1]
         self.v_grid = v_grid
+        if eig_basis:
+            eivecs = self.red_eivecs_grid
+            v_eig = np.einsum("kqnis, akqisjd, kqmjd-> akqnm",
+                              eivecs.conj(), v_grid, eivecs)
+            self.v_grid_eig = v_eig
 
-    def conductivity_grid(self, mode, component, extra_arg=()):
+    def spin_current_grid(self):
+        nk = self.nk
+        nband = self.nband
+        shape = (3, self.dim_k, nk, nk, nband, nband)
+        js_grid = np.zeros(shape, dtype="complex")
+        for i in range(3):
+            for a in range(self.dim_k):
+                S_i = self.S_eig_grid[i]
+                v_a = self.v_grid_eig[a]
+                js = 0.5 * np.einsum("kqnm, kqmo->kqno", S_i, v_a)
+                js += 0.5 * np.einsum("kqnm, kqmo->kqno", v_a, S_i)
+                js_grid[i, a] = js
+        self.js_grid_eig = js_grid
+
+    def conductivity_grid_old(self, mode, component, extra_arg=()):
         k = np.linspace(0, 1, num=self.nk)
         dk = k[1] - k[0]
         other_args = (self.Ef, *component, *extra_arg)
@@ -663,6 +708,27 @@ class Simulation_TB():
 
         return integ * dk**2
 
+    # @profile
+    def conductivity_grid(self, mode, component, extra_arg=()):
+        other_args = (self.Ef, *component, *extra_arg)
+        integrator = {
+            "s_odd": lr.spin_conductivity_k_odd_upg,
+            "s_even": lr.spin_conductivity_k_even_upg,
+            "c_odd": lr.charge_conductivity_k_odd_upg,
+            "c_even": lr.charge_conductivity_k_even_upg
+        }[mode]
+        op_mode = mode[0]
+        args_k = {
+            "s": (
+                self.red_bands_grid,
+                self.v_grid_eig,
+                self.js_grid_eig),
+            "c": (
+                self.red_bands_grid,
+                self.v_grid_eig
+            )}[op_mode]
+        integral = integrator(*args_k, *other_args)
+        return integral
 
 # -----------------------------------------------------------------------------
 # Private methods for reading hopping file.
