@@ -113,11 +113,3 @@ if cond_vs_Ef:
         Sim, cond_mode, component, extra_arg=extra_arg)
 
 
-# Concatenate the new result to an existing one
-if concat:
-    old_integ_result = np.load(path_result / name)
-    integ_result = np.concatenate((old_integ_result, integ_result), axis=0)
-
-
-print("")
-print("")
