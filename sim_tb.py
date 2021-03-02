@@ -438,7 +438,6 @@ class Simulation_TB():
 # Spin conductivities
 # -----------------------------------------------------------------------------
 
-
     def spin_conductivity_k(self, k1, k2, i, a, b, Gamma):
         """
         Note: This method needs the atribute self.Ef already set with the
@@ -499,7 +498,6 @@ class Simulation_TB():
 # -----------------------------------------------------------------------------
 # Charge conductivities
 # -----------------------------------------------------------------------------
-
 
     def charge_conductivity_k(self, k1, k2, a, b, Gamma):
         """
@@ -610,6 +608,7 @@ class Simulation_TB():
 # Operators in regular k-grid
 # -----------------------------------------------------------------------------
 
+
     def create_k_grid(self, nk):
         #self.wf_BZ = pytb.wf_array(self.model, [nk, nk])
         #self.wf_BZ.solve_on_grid([0, 0])
@@ -702,7 +701,7 @@ class Simulation_TB():
             for i2 in range(self.nk):
                 eivals = self.red_bands_grid[i1, i2]
                 eivecs = self.red_eivecs_grid[i1, i2]
-                velocity = self.v_grid[i1, i2]
+                velocity = self.v_grid[:, i1, i2]
                 args_k = (eivals, eivecs, velocity)
                 integ += integrator(*args_k, *other_args)
 

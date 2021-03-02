@@ -299,7 +299,7 @@ def spin_conductivity_k_odd_upg(eivals, v_eig, js_eig, Ef, i, a, b, Gamma):
     gE = 1. / ((Ef-eivals)**2 + Gamma**2)
     sigma_k = np.einsum("kqn, kqnm, kqm, kqmn->kq", gE, js, gE, v_b)
     sigma_k = - np.real(np.sum(sigma_k)) * Gamma**2 / np.pi
-    return sigma_k / dk**2
+    return sigma_k * dk**2
 
 
 # @profile
@@ -311,7 +311,7 @@ def spin_conductivity_k_even_upg(eivals, v_eig, js_eig, Ef, i, a, b):
     js = js_eig[i, a]
     subscripts = "kqnm ,kqnm, kqmn->kq"
     sigma_k = np.einsum(subscripts, js, gap_denom, v_b)
-    return -2 * np.imag(np.sum(sigma_k)) / dk**2
+    return -2 * np.imag(np.sum(sigma_k)) * dk**2
 
 # ------------------------------------------------------------------------------
 # Charge conductivity
@@ -326,7 +326,7 @@ def charge_conductivity_k_odd_upg(eivals, v_eig, Ef, a, b, Gamma):
     gE = 1. / ((Ef-eivals)**2 + Gamma**2)
     sigma_k = np.einsum("kqn, kqnm, kqm, kqmn->kq", gE, v_a, gE, v_b)
     sigma_k = - np.real(np.sum(sigma_k)) * Gamma**2 / np.pi
-    return sigma_k / dk**2
+    return sigma_k * dk**2
 
 
 def charge_conductivity_k_even_upg(eivals, v_eig, Ef, a, b):
@@ -337,7 +337,7 @@ def charge_conductivity_k_even_upg(eivals, v_eig, Ef, a, b):
     v_a = v_eig[a]
     subscripts = "kqnm ,kqnm, kqmn->kq"
     sigma_k = np.einsum(subscripts, v_a, gap_denom, v_b)
-    return -2 * np.imag(np.sum(sigma_k)) / dk**2
+    return -2 * np.imag(np.sum(sigma_k)) * dk**2
 
 # ------------------------------------------------------------------------------
 # Useful utility to calculate time-even integrands
