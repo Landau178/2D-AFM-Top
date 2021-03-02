@@ -687,7 +687,7 @@ class Simulation_TB():
         self.js_grid_eig = js_grid
 
     def conductivity_grid_old(self, mode, component, extra_arg=()):
-        k = np.linspace(0, 1, num=self.nk)
+        k = np.linspace(0, 1, num=self.nk, endpoint=False)
         dk = k[1] - k[0]
         other_args = (self.Ef, *component, *extra_arg)
         integrator = {
