@@ -342,6 +342,8 @@ def magnetic_texture_kagome(mode):
     lattice, according to the modes:
         1. coplanar
         2. coplanar_b 2-fold-y spin rotation of 1.
+        3. coplanar_c 4-fold-z rotarion of 2.
+        4. ferro: All spins pointing upward.
 
     Parameters:
     -----------
@@ -366,8 +368,20 @@ def magnetic_texture_kagome(mode):
         [np.pi/2, np.pi*(1/2 + 2/3)],
         [np.pi/2, np.pi/2]
     ])
+    coplanar_c = np.array([
+        [np.pi/2, np.pi/3],
+        [np.pi/2, -np.pi/3],
+        [np.pi/2, -np.pi]
+    ])
+    ferro = np.array([
+        [0.0,0.0],
+        [0.0,0.0],
+        [0.0,0.0]
+    ])
     texture_dict = {
         "coplanar": coplanar_texture,
-        "coplanar_b": coplanar_b
+        "coplanar_b": coplanar_b,
+        "coplanar_c": coplanar_c,
+        "ferro": ferro
     }
     return texture_dict[mode]
