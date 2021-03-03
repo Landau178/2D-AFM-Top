@@ -54,7 +54,8 @@ class Simulation_TB():
         self.file_man = fm.Sim_TB_file_manager(self)
 
         self.model = pytb.tb_model(self.dim_k, self.dim_r,
-                                   lat=self.lat, orb=self.orb, nspin=self.nspin)
+                                   lat=self.lat, orb=self.orb,
+                                   nspin=self.nspin)
         self.file_man.set_Hamiltonian()
 
     def plot_bands(self, ax, color="green", lw=3):
