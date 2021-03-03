@@ -413,115 +413,6 @@ class Simulation_TB():
 
 
 # -----------------------------------------------------------------------------
-# Spin conductivities
-# -----------------------------------------------------------------------------
-
-
-    def spin_conductivity_k(self, k1, k2, i, a, b, Gamma):
-        """
-        Note: This method needs the atribute self.Ef already set with the
-        Fermi level. This can be done by calling self.set_fermi_lvl()
-
-        Parameters:
-        ----------
-            k1, k2: (floats)
-                K-point in red. coord.
-            i, a, b: (int, int , int)
-                Components of spin conductivity tensor.
-            Gamma: (float)
-                band broadening. (disorder)
-
-        Returns:
-        -------
-            sigma_k: (float)
-                Contribution to the spin conductivity at kpt.
-        """
-        kpt = [k1, k2]
-        eivals, eivecs = self.model.solve_one(kpt, eig_vectors=True)
-        v = self.velocity_operator(kpt)
-        sigma_k = lr.spin_conductivity_k(
-            eivals, eivecs, v, self.Ef, i, a, b, Gamma)
-        return sigma_k
-
-    def spin_conductivity(self, i, a, b, Gamma=1e-3):
-        """
-        BZ integration of the odd spin conductivity tensor.
-        (See self.spin_conductivity_k_odd documentation)
-        """
-        opts = {"epsabs": 1e-5}
-        ranges = [[0, 1], [0, 1]]
-        result, abserr = integ.nquad(self.spin_conductivity_k, ranges, args=(i, a, b, Gamma),
-                                     opts=opts)
-        return result, abserr
-
-    def spin_conductivity_k_even(self, k1, k2, i, a, b):
-        """
-        """
-        kpt = [k1, k2]
-        eivals, eivecs = self.model.solve_one(kpt, eig_vectors=True)
-        v = self.velocity_operator(kpt)
-        sigma_k = lr.spin_conductivity_k_even(
-            eivals, eivecs, v, self.Ef, i, a, b)
-        return sigma_k
-
-    def spin_conductivity_even(self, i, a, b):
-        """
-        """
-        opts = {"epsabs": 1e-4}
-        ranges = [[0, 1], [0, 1]]
-        result, abserr = integ.nquad(self.spin_conductivity_k_even, ranges, args=(i, a, b),
-                                     opts=opts)
-        return result, abserr
-
-
-# -----------------------------------------------------------------------------
-# Charge conductivities
-# -----------------------------------------------------------------------------
-
-
-    def charge_conductivity_k(self, k1, k2, a, b, Gamma):
-        """
-        Same as self.spin_conductivity_k, but calculates
-        the odd charge conductivity.
-        """
-        kpt = [k1, k2]
-        eivals, eivecs = self.model.solve_one(kpt, eig_vectors=True)
-        v = self.velocity_operator(kpt)
-        sigma_k = lr.charge_conductivity_k(
-            eivals, eivecs, v, self.Ef, a, b, Gamma)
-        return sigma_k
-
-    def charge_conductivity(self, a, b, Gamma):
-        """
-        BZ integration of the odd charge conductivity.
-        """
-        opts = {"epsabs": 1e-5}
-        ranges = [[0, 1], [0, 1]]
-        result, abserr = integ.nquad(self.charge_conductivity_k, ranges,
-                                     args=(a, b, Gamma), opts=opts)
-        return result, abserr
-
-    def charge_conductivity_k_even(self, k1, k2, a, b):
-        """
-        """
-        kpt = [k1, k2]
-        eivals, eivecs = self.model.solve_one(kpt, eig_vectors=True)
-        v = self.velocity_operator(kpt)
-        sigma_k = lr.charge_conductivity_k_even(
-            eivals, eivecs, v, self.Ef, a, b)
-        return sigma_k
-
-    def charge_conductivity_even(self, a, b, Gamma):
-        """
-        BZ integration of the even charge conductivity.
-        """
-        opts = {"epsabs": 1e-4}
-        ranges = [[0, 1], [0, 1]]
-        result, abserr = integ.nquad(self.charge_conductivity_k_even, ranges,
-                                     args=(a, b), opts=opts)
-        return result, abserr
-
-# -----------------------------------------------------------------------------
 # Berry curvature and Chern's number with the velocity operator.
 # -----------------------------------------------------------------------------
 
@@ -711,7 +602,7 @@ class Simulation_TB():
 
 if __name__ == "__main__":
     # path = pathlib.Path("tests/")
-    # create_hoppings_toy_model(path, 1, 0.0, 0.1)
+    # toy.create_hoppings_toy_model(path, 1, 0.0, 0.1)
     # Sim = Simulation_TB(path)
     # Sim.model.display()
     # # fig, ax = plt.subplots(1, 2)
