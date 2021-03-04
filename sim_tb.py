@@ -343,22 +343,30 @@ class Simulation_TB():
     def velocity_operator(self, kpt):
         """
         """
+        assert len(kpt) == self.dim_k
+        assert not(self.dim_k == 0)
+
         kpt = np.array(kpt)
         norb, ns = len(self.orb), self.nspin
-        v = np.zeros((2, norb, ns, norb, ns), dtype="complex")
+        dim_k = self.dim_k
+        v = np.zeros((dim_k, norb, ns, norb, ns), dtype="complex")
         for hop in self.hoppings:
-            n1, n2, i, j, h = hop
-            R = np.array([n1, n2])
-            ri = np.array(self.orb[i])[0:2]
-            rj = np.array(self.orb[j])[0:2]
+            n1, n2, n3, i, j, h = hop
+            R = np.array([n1, n2, n3])[0:dim_k]
+            ri = np.array(self.orb[i])[0:dim_k]
+            rj = np.array(self.orb[j])[0:dim_k]
             dr = R + rj - ri
-            r_real = dr[0] * self.lat[0] + dr[1]*self.lat[1]
+
             kr = 2 * np.pi * kpt @ dr
-            exp = np.exp(1j * kr)
-            h_matrix = bzu.pauli_vector(h)*exp
-            for x in range(2):
-                v[x, i, :, j, :] += 1j * r_real[x] * h_matrix
-                v[x, j, :, i, :] += -1j * r_real[x] * h_matrix.T.conjugate()
+            h_matrix = bzu.pauli_vector(h) * np.exp(1j * kr)
+
+            r_cart = 0
+            for x in range(dim_k):
+                r_cart += dr[x] * self.lat[x]
+
+            for x in range(dim_k):
+                v[x, i, :, j, :] += 1j * r_cart[x] * h_matrix
+                v[x, j, :, i, :] += -1j * r_cart[x] * h_matrix.T.conjugate()
         return v
 
 
@@ -366,7 +374,6 @@ class Simulation_TB():
 # Berry curvature and Chern's number with the velocity operator.
 # Methods only valid for k_dim = 2
 # -----------------------------------------------------------------------------
-
 
     def berry_curvature(self, k1, k2, n, a, b, mode="re"):
         """
@@ -430,7 +437,6 @@ class Simulation_TB():
 # -----------------------------------------------------------------------------
 # Operators in regular k-grid
 # -----------------------------------------------------------------------------
-
 
     def create_k_grid(self, nk):
         #self.wf_BZ = pytb.wf_array(self.model, [nk, nk])
@@ -558,7 +564,6 @@ class Simulation_TB():
 # Methods that will be deprecated soon
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
-
 
     def gradient_kred_Hamiltonian(self, kpt):
         """
