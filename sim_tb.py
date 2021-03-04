@@ -364,6 +364,7 @@ class Simulation_TB():
 
 # -----------------------------------------------------------------------------
 # Berry curvature and Chern's number with the velocity operator.
+# Methods only valid for k_dim = 2
 # -----------------------------------------------------------------------------
 
 
