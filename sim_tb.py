@@ -340,57 +340,6 @@ class Simulation_TB():
         self.create_bands_grid_red_coord(nk=nk, endpoint=False)
         self.Ef = self.chemical_potential(tol=tol)
 
-    def gradient_kred_Hamiltonian(self, kpt):
-        """
-        Calculate the k-gradient of the Hamiltonian
-        in reduced coordinates.
-        Parameters:
-        -----------
-            kpt: (list of floats)
-                Reduced coordinates of k-point
-        Returns:
-        --------
-            Grad_H: (np.ndarray, shape (dim_k, n_orb, nspin, norb,nspin)
-                if nspin=1, and (dim_k, n_orb, norb) if nspin=2)
-                Gradient of the Hamiltonian, computed as:
-                Grad_H[0,:,:,:,:] = (H(k1+eps, k2,..)-H(k1,k2,...))/eps
-                Grad_H[1,:,:,:,:] = (H(k1, k2+eps,..)-H(k1,k2,...))/eps
-                Here k1, k2,... are reduced coordinates of k,
-                in such a way:
-                    k = Sum_i ki*bi // (bi are reciprocal lattice vectors)
-        """
-        eps = 1e-9
-        norb = len(self.orb)
-        nspin = self.nspin
-        if nspin == 1:
-            shape_grad = (self.dim_k, norb, norb)
-        else:
-            shape_grad = (self.dim_k, norb, nspin, norb, nspin)
-        grad_H = np.zeros(shape_grad, dtype="complex")
-        H0 = self.model._gen_ham(k_input=kpt)
-        for i in range(self.dim_k):
-            dk = np.zeros(self.dim_k)
-            dk[i] += eps
-            kpt_i = np.array(kpt) + dk
-            H_i = self.model._gen_ham(k_input=kpt_i)
-            grad_H[i] = (H_i - H0) / eps
-        return grad_H
-
-    def velocity_operator_old(self, kpt):
-        """
-        Calculate the velocity operator as the k-gradient
-        of the Hamiltonian.
-
-        Note: The result should be multiplicated by
-        a0/ hbar to recover the physical units.
-        """
-        grad_H = self.gradient_kred_Hamiltonian(kpt)
-        M = bzu.cartesian_to_reduced_k_matrix(self.rlat[0], self.rlat[1])
-        v = np.zeros_like(grad_H)
-        v[0] = grad_H[0] * M[0, 0] + grad_H[1] * M[1, 0]
-        v[1] = grad_H[0] * M[0, 1] + grad_H[1] * M[1, 1]
-        return v
-
     def velocity_operator(self, kpt):
         """
         """
@@ -416,6 +365,7 @@ class Simulation_TB():
 # -----------------------------------------------------------------------------
 # Berry curvature and Chern's number with the velocity operator.
 # -----------------------------------------------------------------------------
+
 
     def berry_curvature(self, k1, k2, n, a, b, mode="re"):
         """
@@ -479,6 +429,7 @@ class Simulation_TB():
 # -----------------------------------------------------------------------------
 # Operators in regular k-grid
 # -----------------------------------------------------------------------------
+
 
     def create_k_grid(self, nk):
         #self.wf_BZ = pytb.wf_array(self.model, [nk, nk])
@@ -599,6 +550,65 @@ class Simulation_TB():
             )}[op_mode]
         integral = integrator(*args_k, *other_args)
         return integral
+
+
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# Methods that will be deprecated soon
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
+
+    def gradient_kred_Hamiltonian(self, kpt):
+        """
+        Calculate the k-gradient of the Hamiltonian
+        in reduced coordinates.
+        Parameters:
+        -----------
+            kpt: (list of floats)
+                Reduced coordinates of k-point
+        Returns:
+        --------
+            Grad_H: (np.ndarray, shape (dim_k, n_orb, nspin, norb,nspin)
+                if nspin=1, and (dim_k, n_orb, norb) if nspin=2)
+                Gradient of the Hamiltonian, computed as:
+                Grad_H[0,:,:,:,:] = (H(k1+eps, k2,..)-H(k1,k2,...))/eps
+                Grad_H[1,:,:,:,:] = (H(k1, k2+eps,..)-H(k1,k2,...))/eps
+                Here k1, k2,... are reduced coordinates of k,
+                in such a way:
+                    k = Sum_i ki*bi // (bi are reciprocal lattice vectors)
+        """
+        eps = 1e-9
+        norb = len(self.orb)
+        nspin = self.nspin
+        if nspin == 1:
+            shape_grad = (self.dim_k, norb, norb)
+        else:
+            shape_grad = (self.dim_k, norb, nspin, norb, nspin)
+        grad_H = np.zeros(shape_grad, dtype="complex")
+        H0 = self.model._gen_ham(k_input=kpt)
+        for i in range(self.dim_k):
+            dk = np.zeros(self.dim_k)
+            dk[i] += eps
+            kpt_i = np.array(kpt) + dk
+            H_i = self.model._gen_ham(k_input=kpt_i)
+            grad_H[i] = (H_i - H0) / eps
+        return grad_H
+
+    def velocity_operator_old(self, kpt):
+        """
+        Calculate the velocity operator as the k-gradient
+        of the Hamiltonian.
+
+        Note: The result should be multiplicated by
+        a0/ hbar to recover the physical units.
+        """
+        grad_H = self.gradient_kred_Hamiltonian(kpt)
+        M = bzu.cartesian_to_reduced_k_matrix(self.rlat[0], self.rlat[1])
+        v = np.zeros_like(grad_H)
+        v[0] = grad_H[0] * M[0, 0] + grad_H[1] * M[1, 0]
+        v[1] = grad_H[0] * M[0, 1] + grad_H[1] * M[1, 1]
+        return v
 
 
 if __name__ == "__main__":
