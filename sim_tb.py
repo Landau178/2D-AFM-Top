@@ -131,10 +131,10 @@ class Simulation_TB():
         if (ax is None) or (fig is None):
             return fig, ax
 
-    def create_bands_grid_red_coord(self, nk=10, return_eivec=True, endpoint=True):
+    def create_bands_grid_red_coord(self, nk=10, return_eivec=True):
         """
         Creates a grid of the eivengavlues and eigenvectors in a grid
-        (k1, k2), in such a wat that:
+        (k1, k2, k3), in such a wat that:
             k = k1 * b1 + k2 * b2
         with b1, b2, reciprocal lattice vectors.
         The grid includes nk x nk values of k1 and k2 in the range (0, 1).
@@ -157,21 +157,30 @@ class Simulation_TB():
         --------
             None
         """
-        k = np.linspace(0, 1, num=nk, endpoint=endpoint)
-        bands_grid = np.zeros((nk, nk, self.nband))
+
+        shape_k = (nk,) * self.dim_k
+        shape_orbs = {
+            1: (len(self.orb),),
+            2: (len(self.orb), 2)
+        }[self.nspin]
+
+        bands_grid = np.zeros((*shape_k, self.nband))
         eivecs_grid = np.zeros(
-            (nk, nk, self.nband, len(self.orb), self.nspin), dtype="complex")
-        for i in range(nk):
-            for j in range(nk):
-                k_red = [k[i], k[j]]
-                if return_eivec:
-                    eival, eivec = self.model.solve_one(
-                        k_red, eig_vectors=True)
-                    bands_grid[i, j, :] = eival
-                    eivecs_grid[i, j, :, :, :] = eivec
-                else:
-                    eival = self.model.solve_one(k_red, eig_vectors=False)
-                    bands_grid[i, j, :] = eival
+            (*shape_k, self.nband, *shape_orbs), dtype="complex")
+        k_grid_path = bzu.red_k_grid_path(nk, self.dim_k)
+
+        for indices, k_red in k_grid_path:
+            indices_eivals = (*indices, slice(None))
+            indices_eivecs = (*indices, slice(None),
+                              slice(None), slice(None))
+            if return_eivec:
+                eival, eivec = self.model.solve_one(
+                    k_red, eig_vectors=True)
+                bands_grid[indices_eivals] = eival
+                eivecs_grid[indices_eivecs] = eivec
+            else:
+                eival = self.model.solve_one(k_red, eig_vectors=False)
+                bands_grid[indices_eivals] = eival
         self.red_bands_grid = bands_grid
         if return_eivec:
             self.red_eivecs_grid = eivecs_grid
@@ -278,7 +287,9 @@ class Simulation_TB():
         eivecs = self.red_eivecs_grid
         nk = np.shape(bands)[0]
         nF = bzu.fermi_dist(bands, mu, T=T)
-        occups_k = np.einsum("kqb,kqbos -> kqos", nF, np.abs(eivecs)**2)
+        k_label = {0: "", 1: "k", 2: "kq", 3: "kqp"}[self.dim_k]
+        subscripts = "{}b,{}bos -> {}os".format(k_label)
+        occups_k = np.einsum(subscripts, nF, np.abs(eivecs)**2)
         occups = np.sum(occups_k, axis=(0, 1)) / (nk**2)
         return occups
 
@@ -311,7 +322,8 @@ class Simulation_TB():
         """
         ansatz_auto = (mu_min is None) or (mu_max is None)
         if ansatz_auto:
-            eivals = self.model.solve_one([0, 0])
+            Gamma = [0.0]*self.dim_k
+            eivals = self.model.solve_one(Gamma)
             mu_min = eivals[0]
             mu_max = eivals[-1]
         try:
@@ -337,7 +349,7 @@ class Simulation_TB():
                 Tolerance in energy.
             nk: (int, default is 100)
         """
-        self.create_bands_grid_red_coord(nk=nk, endpoint=False)
+        self.create_bands_grid_red_coord(nk=nk)
         self.Ef = self.chemical_potential(tol=tol)
 
     def velocity_operator(self, kpt):
@@ -374,6 +386,7 @@ class Simulation_TB():
 # Berry curvature and Chern's number with the velocity operator.
 # Methods only valid for k_dim = 2
 # -----------------------------------------------------------------------------
+
 
     def berry_curvature(self, k1, k2, n, a, b, mode="re"):
         """
@@ -438,12 +451,13 @@ class Simulation_TB():
 # Operators in regular k-grid
 # -----------------------------------------------------------------------------
 
+
     def create_k_grid(self, nk):
         #self.wf_BZ = pytb.wf_array(self.model, [nk, nk])
         #self.wf_BZ.solve_on_grid([0, 0])
         self.nk = nk
         self.create_bands_grid_red_coord(
-            nk=self.nk, return_eivec=True, endpoint=False)
+            nk=self.nk, return_eivec=True)
         self.velocity_operator_grid(eig_basis=True)
         self.spin_operator_grid()
         self.spin_current_grid()
@@ -486,17 +500,20 @@ class Simulation_TB():
         """
         nk = self.nk
         norb = len(self.orb)
-        shape = (2, nk, nk, norb, 2, norb, 2)
+        shape_k = (nk,) * self.dim_k
+        shape = (self.dim_k, *shape_k, norb, 2, norb, 2)
         v_grid = np.zeros(shape, dtype="complex")
         for i in range(nk):
             for j in range(nk):
                 kpt = [i/nk, j/nk]
                 v_k = self.velocity_operator(kpt)
-                v_grid[0, i, j] = v_k[0]
-                v_grid[1, i, j] = v_k[1]
+                for x in range(self.dim_k):
+                    v_grid[x, i, j] = v_k[x]
+
         self.v_grid = v_grid
         if eig_basis:
             eivecs = self.red_eivecs_grid
+            #subscrit = "{}nis, a{}isjd, {}mjd-> a{}nm".format(klabel)
             v_eig = np.einsum("kqnis, akqisjd, kqmjd-> akqnm",
                               eivecs.conj(), v_grid, eivecs)
             self.v_grid_eig = v_eig
@@ -564,6 +581,7 @@ class Simulation_TB():
 # Methods that will be deprecated soon
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
+
 
     def gradient_kred_Hamiltonian(self, kpt):
         """

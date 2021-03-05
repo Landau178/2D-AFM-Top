@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.lib.shape_base import apply_along_axis
 from scipy import linalg as la
 
 
@@ -139,3 +140,29 @@ def fix_gauge_eigenvector(eivecs):
         phase = np.angle(eivecs[i, 0])
         new_eivecs[i, :] = eivecs[i, :] * np.exp(-1j * phase)
     return new_eivecs
+
+
+def red_k_grid_path(nk, dim_k):
+    """
+    Returns an iterable which runs over indices and k-vectors
+    of a regular k_grid
+    Parameters:
+    -----------
+        nk: (int)
+            Size of the k-grid.
+        dim_k: (int)
+            Dimensions of the 1st Brillouin Zone.
+
+    Returns:
+        k_grid_path:
+    """
+    Nk = nk**dim_k
+    k = np.linspace(0, 1, num=nk, endpoint=False)
+    n_arr = list(range(nk))
+    mesh_k_arg = (k,)*dim_k
+    mesh_n_arg = (n_arr,)*dim_k
+    K_grid = np.array(np.meshgrid(*mesh_k_arg, indexing="ij")).T
+    N_grid = np.array(np.meshgrid(*mesh_n_arg, indexing="ij")).T
+    K_grid = np.reshape(K_grid, (Nk, dim_k))
+    N_grid = np.reshape(N_grid, (Nk, dim_k))
+    return zip(N_grid, K_grid)
