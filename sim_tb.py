@@ -287,8 +287,8 @@ class Simulation_TB():
         eivecs = self.red_eivecs_grid
         nk = np.shape(bands)[0]
         nF = bzu.fermi_dist(bands, mu, T=T)
-        k_label = {0: "", 1: "k", 2: "kq", 3: "kqp"}[self.dim_k]
-        subscripts = "{}b,{}bos -> {}os".format(k_label)
+        k_lab = {0: "", 1: "k", 2: "kq", 3: "kqp"}[self.dim_k]
+        subscripts = f"{k_lab}b,{k_lab}bos -> {k_lab}os"
         occups_k = np.einsum(subscripts, nF, np.abs(eivecs)**2)
         occups = np.sum(occups_k, axis=(0, 1)) / (nk**2)
         return occups
@@ -482,10 +482,12 @@ class Simulation_TB():
 
     def spin_operator_grid(self):
         eivecs = self.red_eivecs_grid
-        subscripts = "kqnis, st, kqmit-> kqnm"
+        k_lab = {1: "k", 2: "kq", 3: "kqp"}[self.dim_k]
+        subscripts = f"{k_lab}nis, st, {k_lab}mit-> {k_lab}nm"
         nk = self.nk
         nband = self.nband
-        shape = (3, nk, nk, nband, nband)
+        shape_k = (nk,)*self.dim_k
+        shape = (3, *shape_k, nband, nband)
         S_eig = np.zeros(shape, dtype="complex")
         for i in range(3):
             S = bzu.pauli_matrix(i) / 2
@@ -513,22 +515,26 @@ class Simulation_TB():
         self.v_grid = v_grid
         if eig_basis:
             eivecs = self.red_eivecs_grid
-            #subscrit = "{}nis, a{}isjd, {}mjd-> a{}nm".format(klabel)
-            v_eig = np.einsum("kqnis, akqisjd, kqmjd-> akqnm",
+            k_lab = {1: "k", 2: "kq", 3: "kqp"}[self.dim_k]
+            subscript = f"{k_lab}nis, a{k_lab}isjd, {k_lab}mjd-> a{k_lab}nm"
+            v_eig = np.einsum(subscript,
                               eivecs.conj(), v_grid, eivecs)
             self.v_grid_eig = v_eig
 
     def spin_current_grid(self):
         nk = self.nk
-        nband = self.nband
-        shape = (3, self.dim_k, nk, nk, nband, nband)
+        shape_bands = (self.nband,)*2
+        shape_k = (nk,)*self.dim_k
+        shape = (3, self.dim_k, *shape_k, *shape_bands)
         js_grid = np.zeros(shape, dtype="complex")
+        k_lab = {1: "k", 2: "kq", 3: "kqp"}[self.dim_k]
+        subscript = f"{k_lab}nm, {k_lab}mo-> {k_lab}qno"
         for i in range(3):
             for a in range(self.dim_k):
                 S_i = self.S_eig_grid[i]
                 v_a = self.v_grid_eig[a]
-                js = 0.5 * np.einsum("kqnm, kqmo->kqno", S_i, v_a)
-                js += 0.5 * np.einsum("kqnm, kqmo->kqno", v_a, S_i)
+                js = 0.5 * np.einsum(subscript, S_i, v_a)
+                js += 0.5 * np.einsum(subscript, v_a, S_i)
                 js_grid[i, a] = js
         self.js_grid_eig = js_grid
 
