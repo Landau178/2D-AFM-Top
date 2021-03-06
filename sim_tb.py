@@ -13,6 +13,7 @@ import pythtb as pytb
 import bz_utilities as bzu
 import linear_response as lr
 import toy_models as toy
+import file_manager as fm
 
 
 class Simulation_TB():
@@ -50,34 +51,12 @@ class Simulation_TB():
     def __init__(self, path):
         self.path = pathlib.Path(path).absolute()
         # self.save_config()
-        self._read_config_file()
-        self.init_folders()
+        self.file_man = fm.Sim_TB_file_manager(self)
+
         self.model = pytb.tb_model(self.dim_k, self.dim_r,
-                                   lat=self.lat, orb=self.orb, nspin=self.nspin)
-        self.hoppings = []
-        for hop_file in self.hop_files:
-            self._read_hoppings(name=hop_file)
-
-    def init_folders(self):
-        """
-        Create some folders in the parent directory.
-        """
-        toy.mk_dir(self.path / "bands/")
-        toy.mk_dir(self.path / "k-grid/")
-
-    def set_recip_lat(self):
-        """
-        Set reciprocal vectors. Only valid for r_dim=3.
-        """
-        a1 = self.lat[0]
-        a2 = self.lat[1]
-        a3 = self.lat[2]
-        vol = a1 @ (np.cross(a2, a3))
-        factor = 2 * np.pi / vol
-        b1 = factor * np.cross(a2, a3)
-        b2 = factor * np.cross(a3, a1)
-        b3 = factor * np.cross(a1, a2)
-        self.rlat = np.array([b1, b2, b3])
+                                   lat=self.lat, orb=self.orb,
+                                   nspin=self.nspin)
+        self.file_man.set_Hamiltonian()
 
     def plot_bands(self, ax, color="green", lw=3):
         """
@@ -152,10 +131,10 @@ class Simulation_TB():
         if (ax is None) or (fig is None):
             return fig, ax
 
-    def create_bands_grid_red_coord(self, nk=10, return_eivec=True, endpoint=True):
+    def create_bands_grid_red_coord(self, nk=10, return_eivec=True):
         """
         Creates a grid of the eivengavlues and eigenvectors in a grid
-        (k1, k2), in such a wat that:
+        (k1, k2, k3), in such a wat that:
             k = k1 * b1 + k2 * b2
         with b1, b2, reciprocal lattice vectors.
         The grid includes nk x nk values of k1 and k2 in the range (0, 1).
@@ -178,21 +157,30 @@ class Simulation_TB():
         --------
             None
         """
-        k = np.linspace(0, 1, num=nk, endpoint=endpoint)
-        bands_grid = np.zeros((nk, nk, self.nband))
+
+        shape_k = (nk,) * self.dim_k
+        shape_orbs = {
+            1: (len(self.orb),),
+            2: (len(self.orb), 2)
+        }[self.nspin]
+
+        bands_grid = np.zeros((*shape_k, self.nband))
         eivecs_grid = np.zeros(
-            (nk, nk, self.nband, len(self.orb), self.nspin), dtype="complex")
-        for i in range(nk):
-            for j in range(nk):
-                k_red = [k[i], k[j]]
-                if return_eivec:
-                    eival, eivec = self.model.solve_one(
-                        k_red, eig_vectors=True)
-                    bands_grid[i, j, :] = eival
-                    eivecs_grid[i, j, :, :, :] = eivec
-                else:
-                    eival = self.model.solve_one(k_red, eig_vectors=False)
-                    bands_grid[i, j, :] = eival
+            (*shape_k, self.nband, *shape_orbs), dtype="complex")
+        k_grid_path = bzu.red_k_grid_path(nk, self.dim_k)
+
+        for indices, k_red in k_grid_path:
+            indices_eivals = (*indices, slice(None))
+            indices_eivecs = (*indices, slice(None),
+                              slice(None), slice(None))
+            if return_eivec:
+                eival, eivec = self.model.solve_one(
+                    k_red, eig_vectors=True)
+                bands_grid[indices_eivals] = eival
+                eivecs_grid[indices_eivecs] = eivec
+            else:
+                eival = self.model.solve_one(k_red, eig_vectors=False)
+                bands_grid[indices_eivals] = eival
         self.red_bands_grid = bands_grid
         if return_eivec:
             self.red_eivecs_grid = eivecs_grid
@@ -299,7 +287,9 @@ class Simulation_TB():
         eivecs = self.red_eivecs_grid
         nk = np.shape(bands)[0]
         nF = bzu.fermi_dist(bands, mu, T=T)
-        occups_k = np.einsum("kqb,kqbos -> kqos", nF, np.abs(eivecs)**2)
+        k_lab = {0: "", 1: "k", 2: "kq", 3: "kqp"}[self.dim_k]
+        subscripts = f"{k_lab}b,{k_lab}bos -> {k_lab}os"
+        occups_k = np.einsum(subscripts, nF, np.abs(eivecs)**2)
         occups = np.sum(occups_k, axis=(0, 1)) / (nk**2)
         return occups
 
@@ -332,7 +322,8 @@ class Simulation_TB():
         """
         ansatz_auto = (mu_min is None) or (mu_max is None)
         if ansatz_auto:
-            eivals = self.model.solve_one([0, 0])
+            Gamma = [0.0]*self.dim_k
+            eivals = self.model.solve_one(Gamma)
             mu_min = eivals[0]
             mu_max = eivals[-1]
         try:
@@ -358,192 +349,44 @@ class Simulation_TB():
                 Tolerance in energy.
             nk: (int, default is 100)
         """
-        self.create_bands_grid_red_coord(nk=nk, endpoint=False)
+        self.create_bands_grid_red_coord(nk=nk)
         self.Ef = self.chemical_potential(tol=tol)
-
-    def gradient_kred_Hamiltonian(self, kpt):
-        """
-        Calculate the k-gradient of the Hamiltonian
-        in reduced coordinates.
-        Parameters:
-        -----------
-            kpt: (list of floats)
-                Reduced coordinates of k-point
-        Returns:
-        --------
-            Grad_H: (np.ndarray, shape (dim_k, n_orb, nspin, norb,nspin)
-                if nspin=1, and (dim_k, n_orb, norb) if nspin=2)
-                Gradient of the Hamiltonian, computed as:
-                Grad_H[0,:,:,:,:] = (H(k1+eps, k2,..)-H(k1,k2,...))/eps
-                Grad_H[1,:,:,:,:] = (H(k1, k2+eps,..)-H(k1,k2,...))/eps
-                Here k1, k2,... are reduced coordinates of k,
-                in such a way:
-                    k = Sum_i ki*bi // (bi are reciprocal lattice vectors)
-        """
-        eps = 1e-9
-        norb = len(self.orb)
-        nspin = self.nspin
-        if nspin == 1:
-            shape_grad = (self.dim_k, norb, norb)
-        else:
-            shape_grad = (self.dim_k, norb, nspin, norb, nspin)
-        grad_H = np.zeros(shape_grad, dtype="complex")
-        H0 = self.model._gen_ham(k_input=kpt)
-        for i in range(self.dim_k):
-            dk = np.zeros(self.dim_k)
-            dk[i] += eps
-            kpt_i = np.array(kpt) + dk
-            H_i = self.model._gen_ham(k_input=kpt_i)
-            grad_H[i] = (H_i - H0) / eps
-        return grad_H
-
-    def velocity_operator_old(self, kpt):
-        """
-        Calculate the velocity operator as the k-gradient
-        of the Hamiltonian.
-
-        Note: The result should be multiplicated by
-        a0/ hbar to recover the physical units.
-        """
-        grad_H = self.gradient_kred_Hamiltonian(kpt)
-        M = bzu.cartesian_to_reduced_k_matrix(self.rlat[0], self.rlat[1])
-        v = np.zeros_like(grad_H)
-        v[0] = grad_H[0] * M[0, 0] + grad_H[1] * M[1, 0]
-        v[1] = grad_H[0] * M[0, 1] + grad_H[1] * M[1, 1]
-        return v
 
     def velocity_operator(self, kpt):
         """
         """
+        assert len(kpt) == self.dim_k
+        assert not(self.dim_k == 0)
+
         kpt = np.array(kpt)
         norb, ns = len(self.orb), self.nspin
-        v = np.zeros((2, norb, ns, norb, ns), dtype="complex")
+        dim_k = self.dim_k
+        v = np.zeros((dim_k, norb, ns, norb, ns), dtype="complex")
         for hop in self.hoppings:
-            n1, n2, i, j, h = hop
-            R = np.array([n1, n2])
-            ri = np.array(self.orb[i])[0:2]
-            rj = np.array(self.orb[j])[0:2]
+            n1, n2, n3, i, j, h = hop
+            R = np.array([n1, n2, n3])[0:dim_k]
+            ri = np.array(self.orb[i])[0:dim_k]
+            rj = np.array(self.orb[j])[0:dim_k]
             dr = R + rj - ri
-            r_real = dr[0] * self.lat[0] + dr[1]*self.lat[1]
+
             kr = 2 * np.pi * kpt @ dr
-            exp = np.exp(1j * kr)
-            h_matrix = bzu.pauli_vector(h)*exp
-            for x in range(2):
-                v[x, i, :, j, :] += 1j * r_real[x] * h_matrix
-                v[x, j, :, i, :] += -1j * r_real[x] * h_matrix.T.conjugate()
+            h_matrix = bzu.pauli_vector(h) * np.exp(1j * kr)
+
+            r_cart = 0
+            for x in range(dim_k):
+                r_cart += dr[x] * self.lat[x]
+
+            for x in range(dim_k):
+                v[x, i, :, j, :] += 1j * r_cart[x] * h_matrix
+                v[x, j, :, i, :] += -1j * r_cart[x] * h_matrix.T.conjugate()
         return v
 
 
 # -----------------------------------------------------------------------------
-# Spin conductivities
-# -----------------------------------------------------------------------------
-
-    def spin_conductivity_k(self, k1, k2, i, a, b, Gamma):
-        """
-        Note: This method needs the atribute self.Ef already set with the
-        Fermi level. This can be done by calling self.set_fermi_lvl()
-
-        Parameters:
-        ----------
-            k1, k2: (floats)
-                K-point in red. coord.
-            i, a, b: (int, int , int)
-                Components of spin conductivity tensor.
-            Gamma: (float)
-                band broadening. (disorder)
-
-        Returns:
-        -------
-            sigma_k: (float)
-                Contribution to the spin conductivity at kpt.
-        """
-        kpt = [k1, k2]
-        eivals, eivecs = self.model.solve_one(kpt, eig_vectors=True)
-        v = self.velocity_operator(kpt)
-        sigma_k = lr.spin_conductivity_k(
-            eivals, eivecs, v, self.Ef, i, a, b, Gamma)
-        return sigma_k
-
-    def spin_conductivity(self, i, a, b, Gamma=1e-3):
-        """
-        BZ integration of the odd spin conductivity tensor.
-        (See self.spin_conductivity_k_odd documentation)
-        """
-        opts = {"epsabs": 1e-5}
-        ranges = [[0, 1], [0, 1]]
-        result, abserr = integ.nquad(self.spin_conductivity_k, ranges, args=(i, a, b, Gamma),
-                                     opts=opts)
-        return result, abserr
-
-    def spin_conductivity_k_even(self, k1, k2, i, a, b):
-        """
-        """
-        kpt = [k1, k2]
-        eivals, eivecs = self.model.solve_one(kpt, eig_vectors=True)
-        v = self.velocity_operator(kpt)
-        sigma_k = lr.spin_conductivity_k_even(
-            eivals, eivecs, v, self.Ef, i, a, b)
-        return sigma_k
-
-    def spin_conductivity_even(self, i, a, b):
-        """
-        """
-        opts = {"epsabs": 1e-4}
-        ranges = [[0, 1], [0, 1]]
-        result, abserr = integ.nquad(self.spin_conductivity_k_even, ranges, args=(i, a, b),
-                                     opts=opts)
-        return result, abserr
-
-
-# -----------------------------------------------------------------------------
-# Charge conductivities
-# -----------------------------------------------------------------------------
-
-    def charge_conductivity_k(self, k1, k2, a, b, Gamma):
-        """
-        Same as self.spin_conductivity_k, but calculates
-        the odd charge conductivity.
-        """
-        kpt = [k1, k2]
-        eivals, eivecs = self.model.solve_one(kpt, eig_vectors=True)
-        v = self.velocity_operator(kpt)
-        sigma_k = lr.charge_conductivity_k(
-            eivals, eivecs, v, self.Ef, a, b, Gamma)
-        return sigma_k
-
-    def charge_conductivity(self, a, b, Gamma):
-        """
-        BZ integration of the odd charge conductivity.
-        """
-        opts = {"epsabs": 1e-5}
-        ranges = [[0, 1], [0, 1]]
-        result, abserr = integ.nquad(self.charge_conductivity_k, ranges,
-                                     args=(a, b, Gamma), opts=opts)
-        return result, abserr
-
-    def charge_conductivity_k_even(self, k1, k2, a, b):
-        """
-        """
-        kpt = [k1, k2]
-        eivals, eivecs = self.model.solve_one(kpt, eig_vectors=True)
-        v = self.velocity_operator(kpt)
-        sigma_k = lr.charge_conductivity_k_even(
-            eivals, eivecs, v, self.Ef, a, b)
-        return sigma_k
-
-    def charge_conductivity_even(self, a, b, Gamma):
-        """
-        BZ integration of the even charge conductivity.
-        """
-        opts = {"epsabs": 1e-4}
-        ranges = [[0, 1], [0, 1]]
-        result, abserr = integ.nquad(self.charge_conductivity_k_even, ranges,
-                                     args=(a, b), opts=opts)
-        return result, abserr
-
-# -----------------------------------------------------------------------------
 # Berry curvature and Chern's number with the velocity operator.
+# Methods only valid for k_dim = 2
 # -----------------------------------------------------------------------------
+
 
     def berry_curvature(self, k1, k2, n, a, b, mode="re"):
         """
@@ -614,7 +457,7 @@ class Simulation_TB():
         #self.wf_BZ.solve_on_grid([0, 0])
         self.nk = nk
         self.create_bands_grid_red_coord(
-            nk=self.nk, return_eivec=True, endpoint=False)
+            nk=self.nk, return_eivec=True)
         self.velocity_operator_grid(eig_basis=True)
         self.spin_operator_grid()
         self.spin_current_grid()
@@ -639,10 +482,12 @@ class Simulation_TB():
 
     def spin_operator_grid(self):
         eivecs = self.red_eivecs_grid
-        subscripts = "kqnis, st, kqmit-> kqnm"
+        k_lab = {1: "k", 2: "kq", 3: "kqp"}[self.dim_k]
+        subscripts = f"{k_lab}nis, st, {k_lab}mit-> {k_lab}nm"
         nk = self.nk
         nband = self.nband
-        shape = (3, nk, nk, nband, nband)
+        shape_k = (nk,)*self.dim_k
+        shape = (3, *shape_k, nband, nband)
         S_eig = np.zeros(shape, dtype="complex")
         for i in range(3):
             S = bzu.pauli_matrix(i) / 2
@@ -657,32 +502,39 @@ class Simulation_TB():
         """
         nk = self.nk
         norb = len(self.orb)
-        shape = (2, nk, nk, norb, 2, norb, 2)
+        shape_k = (nk,) * self.dim_k
+        shape = (self.dim_k, *shape_k, norb, 2, norb, 2)
         v_grid = np.zeros(shape, dtype="complex")
         for i in range(nk):
             for j in range(nk):
                 kpt = [i/nk, j/nk]
                 v_k = self.velocity_operator(kpt)
-                v_grid[0, i, j] = v_k[0]
-                v_grid[1, i, j] = v_k[1]
+                for x in range(self.dim_k):
+                    v_grid[x, i, j] = v_k[x]
+
         self.v_grid = v_grid
         if eig_basis:
             eivecs = self.red_eivecs_grid
-            v_eig = np.einsum("kqnis, akqisjd, kqmjd-> akqnm",
+            k_lab = {1: "k", 2: "kq", 3: "kqp"}[self.dim_k]
+            subscript = f"{k_lab}nis, a{k_lab}isjd, {k_lab}mjd-> a{k_lab}nm"
+            v_eig = np.einsum(subscript,
                               eivecs.conj(), v_grid, eivecs)
             self.v_grid_eig = v_eig
 
     def spin_current_grid(self):
         nk = self.nk
-        nband = self.nband
-        shape = (3, self.dim_k, nk, nk, nband, nband)
+        shape_bands = (self.nband,)*2
+        shape_k = (nk,)*self.dim_k
+        shape = (3, self.dim_k, *shape_k, *shape_bands)
         js_grid = np.zeros(shape, dtype="complex")
+        k_lab = {1: "k", 2: "kq", 3: "kqp"}[self.dim_k]
+        subscript = f"{k_lab}nm, {k_lab}mo-> {k_lab}qno"
         for i in range(3):
             for a in range(self.dim_k):
                 S_i = self.S_eig_grid[i]
                 v_a = self.v_grid_eig[a]
-                js = 0.5 * np.einsum("kqnm, kqmo->kqno", S_i, v_a)
-                js += 0.5 * np.einsum("kqnm, kqmo->kqno", v_a, S_i)
+                js = 0.5 * np.einsum(subscript, S_i, v_a)
+                js += 0.5 * np.einsum(subscript, v_a, S_i)
                 js_grid[i, a] = js
         self.js_grid_eig = js_grid
 
@@ -729,196 +581,69 @@ class Simulation_TB():
         integral = integrator(*args_k, *other_args)
         return integral
 
+
 # -----------------------------------------------------------------------------
-# Private methods for reading hopping file.
+# -----------------------------------------------------------------------------
+# Methods that will be deprecated soon
+# -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 
-    def _read_hoppings(self, name="hoppings.dat", mode="set"):
+
+    def gradient_kred_Hamiltonian(self, kpt):
         """
-        Read the hoppings of path/hoppings.dat,
-        and load them into the model.
-        More info in: self.__add_hopping_from_line
-
+        Calculate the k-gradient of the Hamiltonian
+        in reduced coordinates.
         Parameters:
         -----------
-            name: (str, default is "hoppings.dat")
-                name of the hopping file.
-            mode: (str, default is "set)
-                Mode to include hopping.
-                See __add_hopping_from_line
-
-        """
-        path_to_hops = self.path / name
-        with open(path_to_hops, 'r') as reader:
-            for line in reader:
-                if line[0] == "#":
-                    continue
-                self.__add_hopping_from_line(line, mode=mode)
-
-    def save_config(self):
-        """
-        Just for testing
-        """
-        a1 = [1, 0, 0]
-        a2 = [-1/2, np.sqrt(3)/2, 0]
-        a3 = [0, 0, 2/3]
-        lat = [a1, a2, a3]
-        orb = [[1/3, 1/6, 0],  # spin up
-               [5/6, 1/6, 0],  # spin down
-               [1/3, 2/3, 0],  # spin down
-               [5/6, 2/3, 0]]  # spin up
-        nspin = 2
-        k_spoints = [[0, 0], [1/3, 1/3], [0, 1/2], [-1/3, 2/3], [0, 0]]
-        k_sp_labels = ["$\\Gamma$", "$K$", "$M$", "$K'$", "$\\Gamma$"]
-        config = {"dim_k": 2, "dim_r": 3, "lat": lat,
-                  "orb": orb, "nspin": nspin, "Ne": 4, "k_spoints": k_spoints,
-                  "k_sp_labels": k_sp_labels}
-        with open(self.path / 'config.json', 'w') as fp:
-            json.dump(config, fp, sort_keys=True, indent=4)
-
-    def _read_config_file(self):
-        """
-        Read the config file and set the corresponding atributes.
-        """
-        with open(self.path / 'config.json', 'r') as fp:
-            config = json.load(fp)
-        # print(config)
-        self.dim_k = config["dim_k"]
-        self.dim_r = config["dim_r"]
-        self.lat = np.array(config["lat"])
-        self.set_recip_lat()
-        self.orb = config["orb"]
-        self.nspin = config["nspin"]
-        self.nband = len(self.orb) * self.nspin
-        self.Ne = config["Ne"]
-        self.k_spoints = config["k_spoints"]
-        self.k_sp_labels = config["k_sp_labels"]
-        self.hop_files = config["hop_files"]
-
-    def __add_hopping_from_line(self, line, mode="set"):
-        """
-        Recieves a line of the hopping text file and set the corresponding
-        hopping amplitude (or onsite energy) in the tight-binding model.
-        More info about the format of "line" in
-        self.__extract_hopping_from_line .
-
-        Parameters:
-        -----------
-            line: (str)
-                String containing hopping(onsite) amplitdes.
-            mode: (str)
-                Mode to include the hopping in the model.
-                Can be "set", "add" or "reset".
+            kpt: (list of floats)
+                Reduced coordinates of k-point
         Returns:
         --------
-            None
+            Grad_H: (np.ndarray, shape (dim_k, n_orb, nspin, norb,nspin)
+                if nspin=1, and (dim_k, n_orb, norb) if nspin=2)
+                Gradient of the Hamiltonian, computed as:
+                Grad_H[0,:,:,:,:] = (H(k1+eps, k2,..)-H(k1,k2,...))/eps
+                Grad_H[1,:,:,:,:] = (H(k1, k2+eps,..)-H(k1,k2,...))/eps
+                Here k1, k2,... are reduced coordinates of k,
+                in such a way:
+                    k = Sum_i ki*bi // (bi are reciprocal lattice vectors)
         """
-        hop, is_onsite = self.__extract_hopping_from_line(line)
-        if is_onsite:
-            i, h = hop
-            self.model.set_onsite(h, ind_i=i, mode=mode)
+        eps = 1e-9
+        norb = len(self.orb)
+        nspin = self.nspin
+        if nspin == 1:
+            shape_grad = (self.dim_k, norb, norb)
         else:
-            n1, n2, i, j, h = hop
-            self.model.set_hop(h, i, j, ind_R=[n1, n2, 0], mode=mode)
+            shape_grad = (self.dim_k, norb, nspin, norb, nspin)
+        grad_H = np.zeros(shape_grad, dtype="complex")
+        H0 = self.model._gen_ham(k_input=kpt)
+        for i in range(self.dim_k):
+            dk = np.zeros(self.dim_k)
+            dk[i] += eps
+            kpt_i = np.array(kpt) + dk
+            H_i = self.model._gen_ham(k_input=kpt_i)
+            grad_H[i] = (H_i - H0) / eps
+        return grad_H
 
-    def __extract_hopping_from_line(self, line):
+    def velocity_operator_old(self, kpt):
         """
-        Recieves a line of the hopping text file and returns the parameters
-        that characterizes the hopping/onsite term.
+        Calculate the velocity operator as the k-gradient
+        of the Hamiltonian.
 
-        Note: After last update, the function also save the hoppings in atribute
-        self.hoppings: (list)
-            each element in format [n1, n2, i, j, hop_sim]
-            and hop_sim = [t0, tx, ty, tz]
-        Input:
-        ------
-            line: (str)
-                Line can be ingresed in one of the following
-                formats:
-                    1. "n1 n2 i j hr hi"
-                    2. "n1 n2 i j s0r s0i sxr sxi syr syi szr szi"
-                In format 1. the hopping amplitude (or onsite term) is:
-                    h = hr + 1j * hi
-                In format 2, the hopping is expressed in a spin resolved basis,
-                beeing  "s*r" and "s*i" the real and imaginary parts of the
-                coefficients accompaining the pauli matrices s0, sx, sy, sz.
-
-        Returns:
-            hop: (tuple)
-                If is_onsite is True, it contains the parameters:
-                (i, h). Else, the it will contain (n1, n2, i, j, h).
-                With i being the orbital index, and h the hopping
-                or onsite energy. h can be a complex scalar,
-                or a complex array [s0, sx, sy, sz], depending on
-                the format of "line".
-            is_onsite: (Bool)
-                Flag, to determine if the term enconded in line is an
-                onsite energy.
+        Note: The result should be multiplicated by
+        a0/ hbar to recover the physical units.
         """
-        line = self.__reformat_line(line).split(" ")
-        if len(line) == 6:
-            spin_resolved = False
-        elif len(line) == 12:
-            spin_resolved = True
-        else:
-            mssg = "Each line of hoppings file must have"
-            mssg += " 6 or 12 quantities separated by white spaces."
-            mssg += "\nThis line have {} quantities.".format(len(line))
-            raise Exception(mssg)
-        n1, n2 = int(line[0]), int(line[1])
-        i, j = int(line[2]), int(line[3])
-        h = float(line[4]) + 1j * float(line[5])
-        if spin_resolved:
-            sx = float(line[6]) + 1j * float(line[7])
-            sy = float(line[8]) + 1j * float(line[9])
-            sz = float(line[10]) + 1j * float(line[11])
-            h = [h, sx, sy, sz]
-
-        is_onsite = n1 == 0 and n2 == 0
-        is_onsite = is_onsite and i == j
-        # hop_sim will be used to sabe hopping in self.hoppings
-        hop_sim = h if spin_resolved else [h, 0, 0, 0]
-        if is_onsite:
-            hop = (i, h)
-            self.hoppings.append([0, 0, i, i, hop_sim])
-        else:
-            hop = (n1, n2, i, j, h)
-            self.hoppings.append([n1, n2, i, j, hop_sim])
-        return hop, is_onsite
-
-    def __reformat_line(self, line):
-        """
-        Recieves a line of the hopings text file,
-        replaces double spaces (and up to 6 consecutives spaces),
-        by single white space, and removes any final whitespace,
-        as the endline character
-        Parameters:
-        -----------
-            line: (str)
-                String with parameter separated by white
-                spaces.
-        Returns:
-            formated_line: (str)
-                new line, after the formating procedure.
-        """
-        if line[-1] == "\n":
-            formated_line = line[0:-1]
-        else:
-            formated_line = line
-
-        for _ in range(3):
-            formated_line = formated_line.replace("  ", " ")
-
-        while formated_line[-1] == " ":
-            formated_line = formated_line[0:-1]
-        while formated_line[0] == " ":
-            formated_line = formated_line[1::]
-        return formated_line
+        grad_H = self.gradient_kred_Hamiltonian(kpt)
+        M = bzu.cartesian_to_reduced_k_matrix(self.rlat[0], self.rlat[1])
+        v = np.zeros_like(grad_H)
+        v[0] = grad_H[0] * M[0, 0] + grad_H[1] * M[1, 0]
+        v[1] = grad_H[0] * M[0, 1] + grad_H[1] * M[1, 1]
+        return v
 
 
 if __name__ == "__main__":
     # path = pathlib.Path("tests/")
-    # create_hoppings_toy_model(path, 1, 0.0, 0.1)
+    # toy.create_hoppings_toy_model(path, 1, 0.0, 0.1)
     # Sim = Simulation_TB(path)
     # Sim.model.display()
     # # fig, ax = plt.subplots(1, 2)

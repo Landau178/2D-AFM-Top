@@ -321,10 +321,13 @@ def spin_conductivity_k_even_upg(eivals, v_eig, js_eig, Ef, i, a, b):
 def charge_conductivity_k_odd_upg(eivals, v_eig, Ef, a, b, Gamma):
     nk = np.shape(eivals)[0]
     dk = 1 / nk
+    dim_k = len(np.shape(eivals))-1
     v_b = v_eig[b]
     v_a = v_eig[a]
     gE = 1. / ((Ef-eivals)**2 + Gamma**2)
-    sigma_k = np.einsum("kqn, kqnm, kqm, kqmn->kq", gE, v_a, gE, v_b)
+    k_lab = {1: "k", 2: "kq", 3: "kqp"}[dim_k]
+    subscript = f"{k_lab}n, {k_lab}nm, {k_lab}m, {k_lab}mn->{k_lab}"
+    sigma_k = np.einsum(subscript, gE, v_a, gE, v_b)
     sigma_k = - np.real(np.sum(sigma_k)) * Gamma**2 / np.pi
     return sigma_k * dk**2
 
@@ -332,10 +335,12 @@ def charge_conductivity_k_odd_upg(eivals, v_eig, Ef, a, b, Gamma):
 def charge_conductivity_k_even_upg(eivals, v_eig, Ef, a, b):
     nk = np.shape(eivals)[0]
     dk = 1 / nk
+    dim_k = len(np.shape(eivals))-1
     gap_denom = gap_denominator(eivals, Ef)
     v_b = v_eig[b]
     v_a = v_eig[a]
-    subscripts = "kqnm ,kqnm, kqmn->kq"
+    k_lab = {1: "k", 2: "kq", 3: "kqp"}[dim_k]
+    subscripts = f"{k_lab}nm ,{k_lab}nm, {k_lab}mn->{k_lab}"
     sigma_k = np.einsum(subscripts, v_a, gap_denom, v_b)
     return -2 * np.imag(np.sum(sigma_k)) * dk**2
 
@@ -366,8 +371,8 @@ def gap_denominator(eivals, Ef):
     for n in range(nbands):
         for m in range(nbands):
             if not(n == m):
-                denom_nm = 1 / (eivals[:, :, n]-eivals[:, :, m])**2
-                fermi_factor = fermi[:, :, n] * (1-fermi[:, :, m])
-                matrix[:, :, n, m] = denom_nm * fermi_factor
+                denom_nm = 1 / (eivals[..., n]-eivals[..., m])**2
+                fermi_factor = fermi[..., n] * (1-fermi[..., m])
+                matrix[..., n, m] = denom_nm * fermi_factor
 
     return matrix
