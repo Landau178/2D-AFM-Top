@@ -544,8 +544,7 @@ class Simulation_TB():
             "s_odd": lr.spin_conductivity_k,
             "s_even": lr.spin_conductivity_k_even,
             "c_odd": lr.charge_conductivity_k,
-            "c_even": lr.charge_conductivity_k_even,
-            "s_even_zh": lr.spin_conductivity_k_even_zhang
+            "c_even": lr.charge_conductivity_k_even
         }[mode]
         integ = 0
 
@@ -566,7 +565,8 @@ class Simulation_TB():
             "s_odd": lr.spin_conductivity_k_odd_upg,
             "s_even": lr.spin_conductivity_k_even_upg,
             "c_odd": lr.charge_conductivity_k_odd_upg,
-            "c_even": lr.charge_conductivity_k_even_upg
+            "c_even": lr.charge_conductivity_k_even_upg,
+            "s_even_zh": lr.spin_conductivity_k_even_zhang
         }[mode]
         op_mode = mode[0]
         args_k = {
