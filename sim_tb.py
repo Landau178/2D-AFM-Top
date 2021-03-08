@@ -387,7 +387,6 @@ class Simulation_TB():
 # Methods only valid for k_dim = 2
 # -----------------------------------------------------------------------------
 
-
     def berry_curvature(self, k1, k2, n, a, b, mode="re"):
         """
         """
@@ -450,7 +449,6 @@ class Simulation_TB():
 # -----------------------------------------------------------------------------
 # Operators in regular k-grid
 # -----------------------------------------------------------------------------
-
 
     def create_k_grid(self, nk):
         #self.wf_BZ = pytb.wf_array(self.model, [nk, nk])
@@ -546,7 +544,9 @@ class Simulation_TB():
             "s_odd": lr.spin_conductivity_k,
             "s_even": lr.spin_conductivity_k_even,
             "c_odd": lr.charge_conductivity_k,
-            "c_even": lr.charge_conductivity_k_even}[mode]
+            "c_even": lr.charge_conductivity_k_even,
+            "s_even_zh": lr.spin_conductivity_k_even_zhang
+        }[mode]
         integ = 0
 
         for i1 in range(self.nk):
@@ -587,7 +587,6 @@ class Simulation_TB():
 # Methods that will be deprecated soon
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
-
 
     def gradient_kred_Hamiltonian(self, kpt):
         """

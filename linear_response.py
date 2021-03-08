@@ -293,11 +293,14 @@ def charge_conductivity_k_even(eivals, eivecs, velocity, Ef, a, b):
 def spin_conductivity_k_odd_upg(eivals, v_eig, js_eig, Ef, i, a, b, Gamma):
     nk = np.shape(eivals)[0]
     dk = 1 / nk
+    dim_k = len(np.shape(eivals))-1
     v_b = v_eig[b]
     js = js_eig[i, a]
 
     gE = 1. / ((Ef-eivals)**2 + Gamma**2)
-    sigma_k = np.einsum("kqn, kqnm, kqm, kqmn->kq", gE, js, gE, v_b)
+    k_lab = {1: "k", 2: "kq", 3: "kqp"}[dim_k]
+    subscripts = f"{k_lab}n, {k_lab}nm, {k_lab}m, {k_lab}mn->{k_lab}s"
+    sigma_k = np.einsum(subscripts, gE, js, gE, v_b)
     sigma_k = - np.real(np.sum(sigma_k)) * Gamma**2 / np.pi
     return sigma_k * dk**2
 
@@ -306,10 +309,12 @@ def spin_conductivity_k_odd_upg(eivals, v_eig, js_eig, Ef, i, a, b, Gamma):
 def spin_conductivity_k_even_upg(eivals, v_eig, js_eig, Ef, i, a, b):
     nk = np.shape(eivals)[0]
     dk = 1 / nk
+    dim_k = len(np.shape(eivals))-1
     gap_denom = gap_denominator(eivals, Ef)
     v_b = v_eig[b]
     js = js_eig[i, a]
-    subscripts = "kqnm ,kqnm, kqmn->kq"
+    k_lab = {1: "k", 2: "kq", 3: "kqp"}[dim_k]
+    subscripts = f"{k_lab}nm ,{k_lab}nm, {k_lab}mn->{k_lab}"
     sigma_k = np.einsum(subscripts, js, gap_denom, v_b)
     return -2 * np.imag(np.sum(sigma_k)) * dk**2
 
@@ -373,6 +378,52 @@ def gap_denominator(eivals, Ef):
             if not(n == m):
                 denom_nm = 1 / (eivals[..., n]-eivals[..., m])**2
                 fermi_factor = fermi[..., n] * (1-fermi[..., m])
+                matrix[..., n, m] = denom_nm * fermi_factor
+
+    return matrix
+
+# -----------------------------------------------------------------------------
+# Implementation of SHC with the spin Berry curvature, following zhang2018.
+# -----------------------------------------------------------------------------
+
+
+def spin_conductivity_k_even_zhang(eivals, v_eig, js_eig, Ef, i, a, b):
+    nk = np.shape(eivals)[0]
+    dk = 1 / nk
+    dim_k = len(np.shape(eivals))-1
+    gap_denom = gap_denominator_2(eivals, Ef)
+    v_b = v_eig[b]
+    js = js_eig[i, a]
+    k_lab = {1: "k", 2: "kq", 3: "kqp"}[dim_k]
+    subscripts = f"{k_lab}nm ,{k_lab}nm, {k_lab}mn->{k_lab}"
+    sigma_k = np.einsum(subscripts, js, gap_denom, v_b)
+    return 2j * (np.sum(sigma_k)) * dk**2
+
+
+def gap_denominator_2(eivals, Ef):
+    """
+    Calculate the matrix of components:
+        M_{nm} = f_n / (E_n - E_m)**2 
+    If not(n==m) and 0 if n==m.
+
+    Parameters:
+    -----------
+        eivals: (np.ndarray, shape (nk, nk, nbands))
+            Grid in k-space of eivengalues
+
+    Returns:
+    --------
+        matrix: (np.ndarray of shape(nk, nk, nbands, nband))
+    """
+    fermi = bzu.fermi_dist(eivals, Ef)
+    nbands = np.shape(eivals)[-1]
+    nk = np.shape(eivals)[0]
+    matrix = np.zeros((nk, nk, nbands, nbands))
+    for n in range(nbands):
+        for m in range(nbands):
+            if not(n == m):
+                denom_nm = 1 / (eivals[..., n]-eivals[..., m])**2
+                fermi_factor = fermi[..., n]
                 matrix[..., n, m] = denom_nm * fermi_factor
 
     return matrix
