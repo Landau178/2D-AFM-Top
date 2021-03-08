@@ -559,7 +559,7 @@ class Simulation_TB():
         return integ * dk**2
 
     # @profile
-    def conductivity_grid(self, mode, component, extra_arg=()):
+    def conductivity_grid(self, mode, component, extra_arg=(), integ_k=True):
         other_args = (self.Ef, *component, *extra_arg)
         integrator = {
             "s_odd": lr.spin_conductivity_k_odd_upg,
@@ -579,6 +579,9 @@ class Simulation_TB():
                 self.v_grid_eig
             )}[op_mode]
         integral = integrator(*args_k, *other_args)
+        if integ_k:
+            dk = 1 / self.nk
+            integral = np.sum(integral) * dk**2
         return integral
 
 

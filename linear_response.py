@@ -301,8 +301,8 @@ def spin_conductivity_k_odd_upg(eivals, v_eig, js_eig, Ef, i, a, b, Gamma):
     k_lab = {1: "k", 2: "kq", 3: "kqp"}[dim_k]
     subscripts = f"{k_lab}n, {k_lab}nm, {k_lab}m, {k_lab}mn->{k_lab}s"
     sigma_k = np.einsum(subscripts, gE, js, gE, v_b)
-    sigma_k = - np.real(np.sum(sigma_k)) * Gamma**2 / np.pi
-    return sigma_k * dk**2
+    sigma_k = - np.real(sigma_k) * Gamma**2 / np.pi
+    return sigma_k
 
 
 # @profile
@@ -316,7 +316,7 @@ def spin_conductivity_k_even_upg(eivals, v_eig, js_eig, Ef, i, a, b):
     k_lab = {1: "k", 2: "kq", 3: "kqp"}[dim_k]
     subscripts = f"{k_lab}nm ,{k_lab}nm, {k_lab}mn->{k_lab}"
     sigma_k = np.einsum(subscripts, js, gap_denom, v_b)
-    return -2 * np.imag(np.sum(sigma_k)) * dk**2
+    return -2 * np.imag(sigma_k)
 
 # ------------------------------------------------------------------------------
 # Charge conductivity
@@ -333,8 +333,8 @@ def charge_conductivity_k_odd_upg(eivals, v_eig, Ef, a, b, Gamma):
     k_lab = {1: "k", 2: "kq", 3: "kqp"}[dim_k]
     subscript = f"{k_lab}n, {k_lab}nm, {k_lab}m, {k_lab}mn->{k_lab}"
     sigma_k = np.einsum(subscript, gE, v_a, gE, v_b)
-    sigma_k = - np.real(np.sum(sigma_k)) * Gamma**2 / np.pi
-    return sigma_k * dk**2
+    sigma_k = - np.real(sigma_k) * Gamma**2 / np.pi
+    return sigma_k
 
 
 def charge_conductivity_k_even_upg(eivals, v_eig, Ef, a, b):
@@ -397,7 +397,7 @@ def spin_conductivity_k_even_zhang(eivals, v_eig, js_eig, Ef, i, a, b):
     k_lab = {1: "k", 2: "kq", 3: "kqp"}[dim_k]
     subscripts = f"{k_lab}nm ,{k_lab}nm, {k_lab}mn->{k_lab}"
     sigma_k = np.einsum(subscripts, js, gap_denom, v_b)
-    return 2j * (np.sum(sigma_k)) * dk**2
+    return 2j * sigma_k
 
 
 def gap_denominator_2(eivals, Ef):
