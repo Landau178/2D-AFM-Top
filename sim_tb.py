@@ -528,7 +528,7 @@ class Simulation_TB():
         shape = (3, self.dim_k, *shape_k, *shape_bands)
         js_grid = np.zeros(shape, dtype="complex")
         k_lab = {1: "k", 2: "kq", 3: "kqp"}[self.dim_k]
-        subscript = f"{k_lab}nm, {k_lab}mo-> {k_lab}qno"
+        subscript = f"{k_lab}nm, {k_lab}mo-> {k_lab}no"
         for i in range(3):
             for a in range(self.dim_k):
                 S_i = self.S_eig_grid[i]
