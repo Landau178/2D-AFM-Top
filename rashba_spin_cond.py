@@ -28,9 +28,9 @@ path = amod.create_path_rashba_model("", alpha, B=B, th=th, phi=phi, lamb=lamb)
 Sim_rash = amod.Rashba_model(path, alpha, B=B, th=th, phi=phi, lamb=lamb)
 # -----------------------------------------------------------------------------
 
-nk = 200
+nk = 1000
 nE = 50
-Gamma_arr = np.array([12.7e-3])  #np.array([20e-3, 30e-3, 40e-3, 50e-3]) # 1e-3 
+Gamma_arr = np.array([1e-3])  #np.array([20e-3, 30e-3, 40e-3, 50e-3]) # 1e-3 
 
 
 for Gamma in Gamma_arr:
