@@ -198,7 +198,7 @@ class Rashba_model():
 # -----------------------------------------------------------------------------
 
     def spin_conductivity_vs_Ef(self, component, Gamma, nE=50, nk=200):
-        Ef_arr = np.linspace(-0.3, 0.3, nE)
+        Ef_arr = np.linspace(-0.3, 0.2, nE)
         s_cond = np.zeros_like(Ef_arr)
         for i in range(nE):
             Ef = Ef_arr[i]
@@ -221,6 +221,7 @@ class Rashba_model():
         str_G = np.round(Gamma*1e3, decimals=2)
         ending = "Gamma={}meV.npy".format(str_G)
         dir_cond = self.path / "sigma_{}".format(str_comp)
+        toy.mk_dir(dir_cond)
         dir_s_cond = dir_cond / "s_cond_{}_{}".format(str_comp, ending)
         dir_Ef = dir_cond / "Ef_arr_{}".format(ending)
         return dir_Ef, dir_s_cond
