@@ -272,9 +272,9 @@ def create_path_rashba_model(folder, alpha, B=0, th=0, phi=0, lamb=0):
     str_lamb = toy.float2str(lamb)
     str_args = (str_a, str_B, str_th, str_phi, str_lamb)
     str_params = "alpha={}_B={}_(th,phi)=({},{})_lamb={}".format(*str_args)
-    path = toy.ROOT_DIR / \
-        "saved_simulations/toy_model/rashba/{}".format(folder)
-    path += str_params
+    path_sim = "saved_simulations/toy_model/rashba/{}".format(folder)
+    path = toy.ROOT_DIR / path_sim / str_params
+
     toy.mk_dir(path)
     return pathlib.Path(path)
 
