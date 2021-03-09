@@ -111,7 +111,7 @@ class Rashba_model():
                 bands[:, i1, i2] = self.solve_one(kx[i1, i2], ky[i1, i2])
         self.bands_grid = bands
 
-    def plot_bands_1d(self, ax, nk=200, kmax=10):
+    def plot_bands_1d(self, ax, nk=200, kmax=4):
         """
         Plot bands along axis y
         """
