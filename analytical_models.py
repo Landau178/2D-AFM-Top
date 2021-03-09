@@ -27,6 +27,7 @@ class Rashba_model():
     """
 
     def __init__(self, path, alpha, B=0, th=0, phi=0, lamb=0):
+        self.A = 0.238  # hbar**2 / m in eV nm**2
         self.alpha = alpha
         self.set_Zeeman(B, th, phi)
         self.lamb = lamb
@@ -58,8 +59,7 @@ class Rashba_model():
         return hw
 
     def hamiltonian(self, kx, ky):
-        A = 0.5 * 0.238  # hbar**2 / 2m in [eV nm**2]
-        kinetic = A * (kx**2 + ky**2)
+        kinetic = 0.5 * self.A * (kx**2 + ky**2)
         rashba_01 = self.alpha*(-ky - 1j * kx)
         rashba_10 = self.alpha*(-ky + 1j * kx)
         H_r = np.array([
@@ -124,6 +124,12 @@ class Rashba_model():
         ax.plot(ky, bands[:, 1], color="purple")
         ax.set_xlabel("$k_y$     $[nm^{-1}]$")
         ax.set_ylabel("Energy   [eV]")
+        kd = self.B/self.alpha
+        #print("kd = {}".format(kd))
+        ks = self.alpha / self.A
+        ax.axvline(x=ks, ls="--", color="black", lw=0.5)
+        ax.axvline(x=-ks,  ls="--", color="black", lw=0.5)
+        ax.axvline(x=kd,  ls="--", color="green", lw=0.5)
 
     def plot_bands_2d(self, fig, ax, n, kmax=10, cmap="seismic"):
         extent = (-kmax, kmax, -kmax, kmax)
@@ -223,7 +229,6 @@ class Rashba_model():
 # -----------------------------------------------------------------------------
 # Method for calculating spin current expectation value and its vorticity.
 # -----------------------------------------------------------------------------
-
 
     def spin_current(self, kx, ky, n, i, a):
         eivecs = self.solve_one(kx, ky, eig_vectors=True,
