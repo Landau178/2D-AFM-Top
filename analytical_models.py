@@ -58,7 +58,7 @@ class Rashba_model():
         return hw
 
     def hamiltonian(self, kx, ky):
-        A = 3 / (2 * 0.32)
+        A = 0.5 * 0.238  # hbar**2 / 2m in [eV nm**2]
         kinetic = A * (kx**2 + ky**2)
         rashba_01 = self.alpha*(-ky - 1j * kx)
         rashba_10 = self.alpha*(-ky + 1j * kx)
@@ -288,7 +288,7 @@ def create_path_rashba_model(folder, alpha, B=0, th=0, phi=0, lamb=0):
 
 def k_fermi(Ef, alpha, B, signs=(-1, -1, 1)):
     s1, s2, s3 = signs
-    A = 3 / 0.32
+    A = 0.238  # hbar**2 / m in eV nm**2
     kd = B / alpha
     kmin = alpha / A
     discr = 1+2*(Ef/(alpha*kmin) + s3*kd/kmin)
@@ -312,7 +312,7 @@ def limits_k_occup(Ef, alpha, B, band, factor=1.1):
     kx_min, kx_max = -diameter/2, diameter/2
     ky_min, ky_max = center - diameter/2, center + diameter/2
     limits = (kx_min, kx_max, ky_min, ky_max)
-    A = 3 / 0.32
+    A = 0.238  # hbar**2 / m in eV nm**2
     e_d = 0.5*A * (B/alpha)**2
     e_min = - 0.5 * alpha**2 / A - B
     if band == 1 and Ef < e_d:
@@ -335,7 +335,7 @@ class Analytical_Rashba_model():
     """
 
     def __init__(self, alpha, B, phi):
-        self.A = 3 / 0.32
+        self.A = 0.238  # hbar**2 / m in eV nm**2
         self.alpha = alpha
         self.B = B
         self.phi = phi
