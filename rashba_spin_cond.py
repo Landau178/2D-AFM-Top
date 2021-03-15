@@ -17,7 +17,7 @@ import analytical_models as amod
 # This script calculates and save the nonzero components of the spin
 # conductivity in the Rashba Hamiltonian.
 # -----------------------------------------------------------------------------
-
+mode = "c"
 # -----------------------------------------------------------------------------
 # Simulation parameters
 # -----------------------------------------------------------------------------
@@ -28,13 +28,20 @@ path = amod.create_path_rashba_model("", alpha, B=B, th=th, phi=phi, lamb=lamb)
 Sim_rash = amod.Rashba_model(path, alpha, B=B, th=th, phi=phi, lamb=lamb)
 # -----------------------------------------------------------------------------
 
-nk = 1000
+nk = 500
 nE = 50
-Gamma_arr = np.array([1e-3])  #np.array([20e-3, 30e-3, 40e-3, 50e-3]) # 1e-3 
+# np.array([20e-3, 30e-3, 40e-3, 50e-3]) # 1e-3
+Gamma_arr = np.array([12.7e-3])
 
 
-for Gamma in Gamma_arr:
-    print("calculating comp: 1,0,1")
-    Sim_rash.spin_conductivity_vs_Ef((1, 0, 1), Gamma, nk=nk, nE=nE)
-    print("calculating comp: 1,1,0")
-    Sim_rash.spin_conductivity_vs_Ef((1, 1, 0), Gamma, nk=nk, nE=nE)
+if mode == "s":
+    for Gamma in Gamma_arr:
+        print("calculating comp: 1,0,1")
+        Sim_rash.spin_conductivity_vs_Ef((1, 0, 1), Gamma, nk=nk, nE=nE)
+        print("calculating comp: 1,1,0")
+        Sim_rash.spin_conductivity_vs_Ef((1, 1, 0), Gamma, nk=nk, nE=nE)
+
+elif mode == "c":
+    for Gamma in Gamma_arr:
+        print("calculating charge conductivity: xx")
+        Sim_rash.charge_conductivity_vs_Ef((0, 0), Gamma, nk=nk, nE=nE)

@@ -279,6 +279,26 @@ def charge_conductivity_k_even(eivals, eivecs, velocity, Ef, a, b):
     return np.imag(sigma_k)
 
 
+def charge_conductivity_k_even_Mook(eivals, eivecs, velocity, Ef, a, b, Gamma):
+    """
+    """
+    nband = np.size(eivals)
+    vx_eig = np.einsum("nis, isjd, mjd-> nm",
+                       eivecs.conj(), velocity[0], eivecs)
+    vy_eig = np.einsum("nis, isjd, mjd-> nm",
+                       eivecs.conj(), velocity[1], eivecs)
+    v_eig = [vx_eig, vy_eig]
+
+    fermi = bzu.fermi_dist(eivals, Ef)
+    sigma_k = 0
+    for n in range(nband):
+        for m in range(nband):
+            gap = (eivals[n]-eivals[m])
+            factor = (fermi[m]-fermi[n]) / (gap**2 + Gamma**2)
+            sigma_k += factor * v_eig[a][n, m]*v_eig[b][m, n]
+    return sigma_k
+
+
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 # Upgrade of functions that accepts k-grid operators, and perform the integral

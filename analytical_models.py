@@ -193,6 +193,40 @@ class Rashba_model():
         result, abserr = integ.nquad(self.spin_conductivity_k, ranges, args=args,
                                      opts=opts)
         return result, abserr
+
+    def charge_conductivity_k(self, kx, ky, Ef, a, b, Gamma):
+        """
+        Total (odd+even) charge conductivity.
+        """
+        eivals, eivecs = self.solve_one(kx, ky, eig_vectors=True, reshape=True)
+        v = self.velocity_operator(kx, ky)
+        sigma_odd_k = lr.charge_conductivity_k(
+            eivals, eivecs, v, Ef, a, b, Gamma) * 2  # zelezny result x 2 to get Mook's result
+        sigma_even_k = lr.charge_conductivity_k_even_Mook(
+            eivals, eivecs, v, Ef, a, b, Gamma)
+        return sigma_odd_k + sigma_even_k
+
+    def charge_conductivity(self, Ef, component, nk=200, Gamma=12.7e-3,
+                            integrate=True):
+        """
+        Calculate the spin conductivity integrating ina regular k-grid.
+        """
+        kx_min, kx_max, ky_min, ky_max = limits_k_occup(
+            Ef, self.alpha, self.B, 0, factor=1.7)
+        kkx = np.linspace(kx_min, kx_max, nk)
+        kky = np.linspace(ky_min, ky_max, nk)
+        kx, ky = np.meshgrid(kkx, kky)
+        c_cond = np.zeros_like(kx)
+        for x in range(nk):
+            for y in range(nk):
+                c_cond[x, y] = self.charge_conductivity_k(
+                    kx[x, y], ky[x, y], Ef, *component, Gamma)
+        if integrate:
+            integ_c_cond = integ.simps(
+                [integ.simps(c_cond_1d, kky) for c_cond_1d in c_cond], kkx)
+        else:
+            integ_c_cond = c_cond
+        return integ_c_cond
 # -----------------------------------------------------------------------------
 # Methods for calculating spin conductivity as funcion of Ef
 # -----------------------------------------------------------------------------
@@ -225,6 +259,40 @@ class Rashba_model():
         dir_s_cond = dir_cond / "s_cond_{}_{}".format(str_comp, ending)
         dir_Ef = dir_cond / "Ef_arr_{}".format(ending)
         return dir_Ef, dir_s_cond
+
+
+# ----------------------------------------------------------------------------
+# Methods to claculate charge conductivity as function of the Fermi level
+# ----------------------------------------------------------------------------
+
+    def charge_conductivity_vs_Ef(self, component, Gamma, nE=50, nk=200):
+        Ef_arr = np.linspace(-0.3, 0.2, nE)
+        c_cond = np.zeros_like(Ef_arr)
+        for i in range(nE):
+            Ef = Ef_arr[i]
+            c_cond[i] = self.charge_conductivity(
+                Ef, component, nk=nk, Gamma=Gamma)
+        dir_Ef, dir_c_cond = self.directory_c_cond(component, Gamma)
+        np.save(dir_c_cond, c_cond)
+        np.save(dir_Ef, Ef_arr)
+        return Ef_arr, c_cond
+
+    def load_charge_conduvtivity_vs_Ef(self, component, Gamma):
+        dir_Ef, dir_c_cond = self.directory_c_cond(component, Gamma)
+        c_cond = np.load(dir_c_cond)
+        Ef_arr = np.load(dir_Ef)
+        return Ef_arr, c_cond
+
+    def directory_c_cond(self, component, Gamma):
+        cart_comp = pltu.int2cart(component)
+        str_comp = cart_comp[0]+cart_comp[1]
+        str_G = np.round(Gamma*1e3, decimals=2)
+        ending = "Gamma={}meV.npy".format(str_G)
+        dir_cond = self.path / "sigma_{}".format(str_comp)
+        toy.mk_dir(dir_cond)
+        dir_c_cond = dir_cond / "c_cond_{}_{}".format(str_comp, ending)
+        dir_Ef = dir_cond / "Ef_arr_{}".format(ending)
+        return dir_Ef, dir_c_cond
 
 
 # -----------------------------------------------------------------------------
