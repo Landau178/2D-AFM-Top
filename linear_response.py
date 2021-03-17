@@ -140,6 +140,37 @@ def spin_conductivity_k_mook(eivals, eivecs, velocity, Ef, i, a, b, Gamma):
     return np.real(sigma_k)
 
 
+def spin_conductivity_k_mook_gaussian(eivals, eivecs, velocity, Ef, i, a, b, Gamma):
+    """
+    Same as spin_conductivity_k, but using the definittion of Mook2020 [2],
+    and a gaussian approximation fo the dirac delta.
+    """
+    nband = np.size(eivals)
+    S = bzu.pauli_matrix(i) / 2
+    S_eig = np.einsum("nis, st, mit-> nm", eivecs.conj(), S, eivecs)
+    vx_eig = np.einsum("nis, isjd, mjd-> nm",
+                       eivecs.conj(), velocity[0], eivecs)
+    vy_eig = np.einsum("nis, isjd, mjd-> nm",
+                       eivecs.conj(), velocity[1], eivecs)
+    v_eig = [vx_eig, vy_eig]
+    js = 0.5 * (S_eig @ v_eig[a] + v_eig[a] @ S_eig)
+    sigma_k = 0
+    for n in range(nband):
+        for m in range(nband):
+            if not(n == m):
+                f_n = bzu.fermi_dist(eivals[n], Ef)
+                f_m = bzu.fermi_dist(eivals[m], Ef)
+                factor = -Gamma*(f_m-f_n) / (eivals[n]-eivals[m])
+                denominator = (eivals[n]-eivals[m])**2 + Gamma**2
+                sigma_k += factor / denominator * js[n, m]*v_eig[b][m, n]
+            else:  # ill-defined term
+                s = Gamma
+                x = eivals[n]-Ef
+                df = np.exp(- 0.5 * x**2 / s**2) / (s * np.sqrt(2*np.pi))
+                sigma_k += js[n, n]*v_eig[b][n, n] * df / Gamma
+    return np.real(sigma_k)
+
+
 def spin_conductivity_k_mook_intra(eivals, eivecs, velocity, Ef, i, a, b, Gamma):
     """
     Same as spin_conductivity_k, but using the definition of Mook2020 [2].

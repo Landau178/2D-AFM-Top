@@ -161,6 +161,7 @@ class Rashba_model():
             "zelezny_intra": lr.spin_conductivity_k_zelezny_intra,
             "zelezny_inter": lr.spin_conductivity_k_zelezny_inter,
             "mook": lr.spin_conductivity_k_mook,
+            "mook2": lr.spin_conductivity_k_mook_gaussian,
             "mook_intra": lr.spin_conductivity_k_mook_intra,
             "mook_inter": lr.spin_conductivity_k_mook_inter
         }[mode]

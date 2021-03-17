@@ -41,8 +41,8 @@ def main():
     Sim_rash = amod.Rashba_model(path, alpha, B=B, th=th, phi=phi, lamb=lamb)
     # -----------------------------------------------------------------------------
     Gamma_arr = np.array([12.7e-3])
-    mode_c_list = ["odd_m"] #["odd_z", "even_z", "odd_m", "even_m"]
-    mode_s_list = ["zelezny", "mook"]
+    mode_c_list = ["odd_m"]  # ["odd_z", "even_z", "odd_m", "even_m"]
+    mode_s_list = ["mook2"]  # ["zelezny", "mook"]
 
     if mode == "s":
         routine_spin_cond(Sim_rash, Gamma_arr, mode_s_list, nk, nE, nproc)
@@ -77,4 +77,3 @@ def routine_charge_cond(Sim_rash, Gamma_arr, mode_c_list, nk, nE, nproc):
 
 if __name__ == "__main__":
     main()
-
