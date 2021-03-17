@@ -149,7 +149,9 @@ class Rashba_model():
         ax.plot_surface(kx, ky, self.bands_grid[n, :, :],
                         linewidth=0, antialiased=False)
 
-    def spin_conductivity_k(self, kx, ky, Ef, i, a, b, Gamma):
+# -----------------------------------------------------------------------------
+
+    def spin_conductivity_k(self, kx, ky, Ef, i, a, b, Gamma, mode="zelezny"):
         """
         """
         eivals, eivecs = self.solve_one(kx, ky, eig_vectors=True, reshape=True)
@@ -161,7 +163,7 @@ class Rashba_model():
             "mook": lr.spin_conductivity_k_mook,
             "mook_intra": lr.spin_conductivity_k_mook_intra,
             "mook_inter": lr.spin_conductivity_k_mook_inter
-        }[self.mode_s_cond]
+        }[mode]
         sigma_k = spin_cond_function(
             eivals, eivecs, v, Ef, i, a, b, Gamma)
         return sigma_k
@@ -195,6 +197,44 @@ class Rashba_model():
         result, abserr = integ.nquad(self.spin_conductivity_k, ranges, args=args,
                                      opts=opts)
         return result, abserr
+
+    def spin_conductivity_work(self, Ef, component, Gamma, mode, limits, nk,
+                               i_0, i_f):
+        """
+        Calculate the spin conductivity integrating ina regular k-grid.
+        Work for parallel computing in a fraction of the BZ.
+        """
+        kx_min, kx_max, ky_min, ky_max = limits
+        kkx = np.linspace(kx_min, kx_max, nk)
+        kky = np.linspace(ky_min, ky_max, nk)
+        kx, ky = np.meshgrid(kkx, kky)
+        s_cond = np.zeros_like(kx)
+        for x in range(i_0, i_f):
+            for y in range(nk):
+                s_cond[x, y] = self.spin_conductivity_k(
+                    kx[x, y], ky[x, y], Ef, *component, Gamma, mode)
+
+        integ_s_cond = integ.simps(
+            [integ.simps(s_cond_1d, kky) for s_cond_1d in s_cond], kkx)
+
+        return integ_s_cond
+
+    def spin_conductivity_parallel(self, Ef, component, nk=200, Gamma=12.7e-3,
+                                   mode="zelezny", nproc=4):
+        """
+        Parallel calculation of spin conductivity.
+        """
+        limits = limits_k_occup(
+            Ef, self.alpha, self.B, 0, factor=1.7)
+        common_args = (Ef, component, Gamma, mode, limits, nk)
+        args_list = self.work_args(common_args, nk, nproc)
+
+        with Pool(nproc) as pool:
+            sigma_k_list = pool.starmap(
+                self.spin_conductivity_work, args_list)
+        sigma_k = np.sum(np.array(sigma_k_list))
+        return sigma_k
+# -----------------------------------------------------------------------------
 
     def charge_conductivity_k(self, kx, ky, Ef, a, b, Gamma, mode):
         """
@@ -286,29 +326,29 @@ class Rashba_model():
 # Methods for calculating spin conductivity as funcion of Ef
 # -----------------------------------------------------------------------------
 
-    def spin_conductivity_vs_Ef(self, component, Gamma, nE=50, nk=200):
+    def spin_conductivity_vs_Ef(self, component, Gamma, nE=50, nk=200, mode="zelezny", nproc=4):
         Ef_arr = np.linspace(-0.3, 0.2, nE)
         s_cond = np.zeros_like(Ef_arr)
         for i in range(nE):
             Ef = Ef_arr[i]
-            s_cond[i] = self.spin_conductivity(
-                Ef, component, nk=nk, Gamma=Gamma)
-        dir_Ef, dir_s_cond = self.directory_s_cond(component, Gamma)
+            s_cond[i] = self.spin_conductivity_parallel(
+                Ef, component, nk=nk, Gamma=Gamma, mode=mode, nproc=nproc)
+        dir_Ef, dir_s_cond = self.directory_s_cond(component, Gamma, mode)
         np.save(dir_s_cond, s_cond)
         np.save(dir_Ef, Ef_arr)
         return Ef_arr, s_cond
 
-    def load_spin_conductivity_vs_Ef(self, component, Gamma):
-        dir_Ef, dir_s_cond = self.directory_s_cond(component, Gamma)
+    def load_spin_conductivity_vs_Ef(self, component, Gamma, mode):
+        dir_Ef, dir_s_cond = self.directory_s_cond(component, Gamma, mode)
         s_cond = np.load(dir_s_cond)
         Ef_arr = np.load(dir_Ef)
         return Ef_arr, s_cond
 
-    def directory_s_cond(self, component, Gamma):
+    def directory_s_cond(self, component, Gamma, mode):
         cart_comp = pltu.int2cart(component)
         str_comp = cart_comp[0]+cart_comp[1]+cart_comp[2]
         str_G = np.round(Gamma*1e3, decimals=2)
-        ending = "Gamma={}meV.npy".format(str_G)
+        ending = "Gamma={}meV_{}.npy".format(str_G, mode)
         dir_cond = self.path / "sigma_{}".format(str_comp)
         toy.mk_dir(dir_cond)
         dir_s_cond = dir_cond / "s_cond_{}_{}".format(str_comp, ending)

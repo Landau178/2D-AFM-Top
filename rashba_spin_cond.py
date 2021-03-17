@@ -14,7 +14,7 @@ import plot_utils as pltu
 import analytical_models as amod
 
 # -----------------------------------------------------------------------------
-# This script calculates and save the nonzero components of the spin
+# This script calculates and save the nonzero components of the spin/charge
 # conductivity in the Rashba Hamiltonian.
 # -----------------------------------------------------------------------------
 mode = "c"
@@ -34,20 +34,26 @@ nE = 50
 # np.array([20e-3, 30e-3, 40e-3, 50e-3]) # 1e-3
 Gamma_arr = np.array([12.7e-3])
 mode_c_list = ["odd_z", "even_z", "odd_m", "even_m"]
+mode_s_list = ["zelezny", "mook"]
 
-if mode == "s":
-    for Gamma in Gamma_arr:
-        print("calculating comp: 1,0,1")
-        Sim_rash.spin_conductivity_vs_Ef((1, 0, 1), Gamma, nk=nk, nE=nE)
-        print("calculating comp: 1,1,0")
-        Sim_rash.spin_conductivity_vs_Ef((1, 1, 0), Gamma, nk=nk, nE=nE)
 
-elif mode == "c":
-    for Gamma in Gamma_arr:
-        for mode_c in mode_c_list:
-            mssg = "Calculating charge conductivity: {}-{}"
-            opts = {"nk": nk, "nE": nE, "mode": mode_c, "nproc": nproc}
-            print(mssg.forma(mode_c, "xx"))
-            Sim_rash.charge_conductivity_vs_Ef((0, 0), Gamma, **opts)
-            print(mssg.forma(mode_c, "yy"))
-            Sim_rash.charge_conductivity_vs_Ef((1, 1), Gamma, **opts)
+if __name__ == "__main__":
+    if mode == "s":
+        for Gamma in Gamma_arr:
+            for mode_s in mode_s_list:
+                mssg = "Calculating spin conductivity: {}-{}"
+                opts = {"nk": nk, "nE": nE, "mode": mode_s, "nproc": nproc}
+                print(mssg.format(mode_s, "yxy"))
+                Sim_rash.spin_conductivity_vs_Ef((1, 0, 1), Gamma, **opts)
+                print(mssg.format(mode_s, "yyx"))
+                Sim_rash.spin_conductivity_vs_Ef((1, 1, 0), Gamma, **opts)
+
+    elif mode == "c":
+        for Gamma in Gamma_arr:
+            for mode_c in mode_c_list:
+                mssg = "Calculating charge conductivity: {}-{}"
+                opts = {"nk": nk, "nE": nE, "mode": mode_c, "nproc": nproc}
+                print(mssg.forma(mode_c, "xx"))
+                Sim_rash.charge_conductivity_vs_Ef((0, 0), Gamma, **opts)
+                print(mssg.forma(mode_c, "yy"))
+                Sim_rash.charge_conductivity_vs_Ef((1, 1), Gamma, **opts)
