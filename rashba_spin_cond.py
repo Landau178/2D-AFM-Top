@@ -18,6 +18,7 @@ import analytical_models as amod
 # conductivity in the Rashba Hamiltonian.
 # -----------------------------------------------------------------------------
 mode = "c"
+nproc = 8
 # -----------------------------------------------------------------------------
 # Simulation parameters
 # -----------------------------------------------------------------------------
@@ -44,4 +45,7 @@ if mode == "s":
 elif mode == "c":
     for Gamma in Gamma_arr:
         print("calculating charge conductivity: xx")
-        Sim_rash.charge_conductivity_vs_Ef((0, 0), Gamma, nk=nk, nE=nE)
+        Sim_rash.charge_conductivity_vs_Ef(
+            (0, 0), Gamma, nk=nk, nE=nE, mode="odd_z", nproc=nproc)
+        Sim_rash.charge_conductivity_vs_Ef(
+            (1, 1), Gamma, nk=nk, nE=nE, mode="odd_z", nproc=nproc)

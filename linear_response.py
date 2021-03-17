@@ -237,7 +237,7 @@ def spin_conductivity_k_even(eivals, eivecs, velocity, Ef, i, a, b):
     return np.imag(sigma_k)
 
 # -----------------------------------------------------------------------------
-# Charge conduictivities, odd and even.
+# Charge conductivities, odd and even.
 # -----------------------------------------------------------------------------
 
 
@@ -255,7 +255,7 @@ def charge_conductivity_k(eivals, eivecs, velocity, Ef, a, b, Gamma):
 
     gE = 1. / ((Ef-eivals)**2 + Gamma**2)
     sigma_k = np.einsum("n, nm, m, mn->", gE, v_eig[a], gE, v_eig[b])
-    sigma_k = - np.real(sigma_k) * Gamma**2 / np.pi
+    sigma_k = np.real(sigma_k) * Gamma**2 / np.pi
     return sigma_k
 
 
@@ -275,8 +275,35 @@ def charge_conductivity_k_even(eivals, eivecs, velocity, Ef, a, b):
     for n in range(index_Ef+1):
         for m in range(index_Ef+1, nband):
             denominator = (eivals[n]-eivals[m])**2
-            sigma_k += -2 * v_eig[a][n, m]*v_eig[b][m, n] / denominator
+            sigma_k += 2 * v_eig[a][n, m]*v_eig[b][m, n] / denominator
     return np.imag(sigma_k)
+
+
+def charge_conductivity_k_odd_Mook(eivals, eivecs, velocity, Ef, a, b, Gamma):
+    """
+    """
+    vx_eig = np.einsum("nis, isjd, mjd-> nm",
+                       eivecs.conj(), velocity[0], eivecs)
+    vy_eig = np.einsum("nis, isjd, mjd-> nm",
+                       eivecs.conj(), velocity[1], eivecs)
+    v_eig = [vx_eig, vy_eig]
+    sigma_k = 0
+    nband = np.size(eivals)
+    for n in range(nband):
+        for m in range(nband):
+            va_vb = np.real(v_eig[a][n, m]*v_eig[b][m, n])
+            # interband
+            if not(n == m):
+                f_n = bzu.fermi_dist(eivals[n], Ef)
+                f_m = bzu.fermi_dist(eivals[m], Ef)
+                factor = Gamma*(f_m-f_n) / (eivals[n]-eivals[m])
+                denominator = (eivals[n]-eivals[m])**2 + Gamma**2
+                sigma_k += factor / denominator * va_vb
+            # intraband
+            else:  # ill-defined term
+                s = Gamma
+                df = s/np.pi / ((eivals[n]-Ef)**2 + s**2)
+                sigma_k += va_vb * df / Gamma
 
 
 def charge_conductivity_k_even_Mook(eivals, eivecs, velocity, Ef, a, b, Gamma):
@@ -293,9 +320,10 @@ def charge_conductivity_k_even_Mook(eivals, eivecs, velocity, Ef, a, b, Gamma):
     sigma_k = 0
     for n in range(nband):
         for m in range(nband):
+            va_vb = np.imag(v_eig[a][n, m]*v_eig[b][m, n])
             gap = (eivals[n]-eivals[m])
             factor = (fermi[m]-fermi[n]) / (gap**2 + Gamma**2)
-            sigma_k += factor * v_eig[a][n, m]*v_eig[b][m, n]
+            sigma_k += factor * va_vb
     return sigma_k
 
 
