@@ -41,7 +41,7 @@ def main():
     Sim_rash = amod.Rashba_model(path, alpha, B=B, th=th, phi=phi, lamb=lamb)
     # -----------------------------------------------------------------------------
     Gamma_arr = np.array([12.7e-3])
-    mode_c_list = ["odd_z", "even_z", "odd_m", "even_m"]
+    mode_c_list = ["odd_m"] #["odd_z", "even_z", "odd_m", "even_m"]
     mode_s_list = ["zelezny", "mook"]
 
     if mode == "s":
