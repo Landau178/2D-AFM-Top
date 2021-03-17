@@ -29,11 +29,11 @@ path = amod.create_path_rashba_model("", alpha, B=B, th=th, phi=phi, lamb=lamb)
 Sim_rash = amod.Rashba_model(path, alpha, B=B, th=th, phi=phi, lamb=lamb)
 # -----------------------------------------------------------------------------
 
-nk = 500
+nk = 400
 nE = 50
 # np.array([20e-3, 30e-3, 40e-3, 50e-3]) # 1e-3
 Gamma_arr = np.array([12.7e-3])
-
+mode_c_list = ["odd_z", "even_z", "odd_m", "even_m"]
 
 if mode == "s":
     for Gamma in Gamma_arr:
@@ -44,8 +44,10 @@ if mode == "s":
 
 elif mode == "c":
     for Gamma in Gamma_arr:
-        print("calculating charge conductivity: xx")
-        Sim_rash.charge_conductivity_vs_Ef(
-            (0, 0), Gamma, nk=nk, nE=nE, mode="odd_z", nproc=nproc)
-        Sim_rash.charge_conductivity_vs_Ef(
-            (1, 1), Gamma, nk=nk, nE=nE, mode="odd_z", nproc=nproc)
+        for mode_c in mode_c_list:
+            print("calculating charge conductivity: {}-xx".forma(mode_c))
+            Sim_rash.charge_conductivity_vs_Ef(
+                (0, 0), Gamma, nk=nk, nE=nE, mode=mode_c, nproc=nproc)
+            print("calculating charge conductivity: {}-yy".forma(mode_c))
+            Sim_rash.charge_conductivity_vs_Ef(
+                (1, 1), Gamma, nk=nk, nE=nE, mode=mode_c, nproc=nproc)
