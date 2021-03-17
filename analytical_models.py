@@ -269,12 +269,13 @@ class Rashba_model():
 
     def charge_conductivity_parallel(self, Ef, component, nk=200, Gamma=12.7e-3, mode="odd_z", nproc=4):
         """
+        Parallel calculation of charge conductivity.
         """
         limits = limits_k_occup(
             Ef, self.alpha, self.B, 0, factor=1.7)
         common_args = (Ef, component, Gamma, mode, limits, nk)
         args_list = self.work_args(common_args, nk, nproc)
-        print(args_list)
+
         with Pool(nproc) as pool:
             sigma_k_list = pool.starmap(
                 self.charge_conductivity_work, args_list)
