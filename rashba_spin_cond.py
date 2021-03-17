@@ -24,7 +24,7 @@ def main():
     # -----------------------------------------------------------------------------
     # Routine parameters
     # -----------------------------------------------------------------------------
-    mode = "c"
+    mode = "s"
     nproc = 6
 
     nk = 400
@@ -56,7 +56,7 @@ def main():
 def routine_spin_cond(Sim_rash, Gamma_arr, mode_s_list, nk, nE, nproc):
     for Gamma in Gamma_arr:
         for mode_s in mode_s_list:
-            mssg = "Calculating spin conductivity: {}-{}"
+            mssg = "\n\n\nCalculating spin conductivity: {}-{}"
             opts = {"nk": nk, "nE": nE, "mode": mode_s, "nproc": nproc}
             print(mssg.format(mode_s, "yxy"))
             Sim_rash.spin_conductivity_vs_Ef((1, 0, 1), Gamma, **opts)
