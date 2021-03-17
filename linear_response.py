@@ -304,6 +304,7 @@ def charge_conductivity_k_odd_Mook(eivals, eivecs, velocity, Ef, a, b, Gamma):
                 s = Gamma
                 df = s/np.pi / ((eivals[n]-Ef)**2 + s**2)
                 sigma_k += va_vb * df / Gamma
+    return sigma_k
 
 
 def charge_conductivity_k_even_Mook(eivals, eivecs, velocity, Ef, a, b, Gamma):

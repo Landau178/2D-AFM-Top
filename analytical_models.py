@@ -251,10 +251,6 @@ class Rashba_model():
         charge_cond_func, extra_args = charge_cond_dict[mode]
         sigma_k = charge_cond_func(
             eivals, eivecs, v, Ef, a, b, *extra_args)
-        # sigma_odd_k = lr.charge_conductivity_k(
-        #    eivals, eivecs, v, Ef, a, b, Gamma) * 2  # zelezny result x 2 to get Mook's result
-        # sigma_even_k = lr.charge_conductivity_k_even_Mook(
-        #    eivals, eivecs, v, Ef, a, b, Gamma)
         return sigma_k
 
     def charge_conductivity(self, Ef, component, nk=200, Gamma=12.7e-3,
