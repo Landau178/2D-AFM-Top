@@ -166,7 +166,7 @@ def spin_conductivity_k_mook_gaussian(eivals, eivecs, velocity, Ef, i, a, b, Gam
             else:  # ill-defined term
                 s = Gamma
                 x = eivals[n]-Ef
-                df = np.exp(- 0.5 * x**2 / s**2) / (s * np.sqrt(2*np.pi))
+                df = -np.exp(- 0.5 * x**2 / s**2) / (s * np.sqrt(2*np.pi))
                 sigma_k += js[n, n]*v_eig[b][n, n] * df / Gamma
     return np.real(sigma_k)
 
