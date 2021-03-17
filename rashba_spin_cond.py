@@ -13,6 +13,7 @@ import toy_models as toy
 import plot_utils as pltu
 import analytical_models as amod
 
+
 # -----------------------------------------------------------------------------
 # This script calculates and save the nonzero components of the spin
 # conductivity in the Rashba Hamiltonian.
@@ -35,19 +36,21 @@ nE = 50
 Gamma_arr = np.array([12.7e-3])
 mode_c_list = ["odd_z", "even_z", "odd_m", "even_m"]
 
-if mode == "s":
-    for Gamma in Gamma_arr:
-        print("calculating comp: 1,0,1")
-        Sim_rash.spin_conductivity_vs_Ef((1, 0, 1), Gamma, nk=nk, nE=nE)
-        print("calculating comp: 1,1,0")
-        Sim_rash.spin_conductivity_vs_Ef((1, 1, 0), Gamma, nk=nk, nE=nE)
 
-elif mode == "c":
-    for Gamma in Gamma_arr:
-        for mode_c in mode_c_list:
-            mssg = "\n\n\nCalculating charge conductivity: {}-{}"
-            opts = {"nk": nk, "nE": nE, "mode": mode_c, "nproc": nproc}
-            print(mssg.format(mode_c, "xx"))
-            Sim_rash.charge_conductivity_vs_Ef((0, 0), Gamma, **opts)
-            print(mssg.format(mode_c, "yy"))
-            Sim_rash.charge_conductivity_vs_Ef((1, 1), Gamma, **opts)
+if __name__=="__main__":
+    if mode == "s":
+        for Gamma in Gamma_arr:
+            print("calculating comp: 1,0,1")
+            Sim_rash.spin_conductivity_vs_Ef((1, 0, 1), Gamma, nk=nk, nE=nE)
+            print("calculating comp: 1,1,0")
+            Sim_rash.spin_conductivity_vs_Ef((1, 1, 0), Gamma, nk=nk, nE=nE)
+
+    elif mode == "c":
+        for Gamma in Gamma_arr:
+            for mode_c in mode_c_list:
+                mssg = "\n\n\nCalculating charge conductivity: {}-{}"
+                opts = {"nk": nk, "nE": nE, "mode": mode_c, "nproc": nproc}
+                print(mssg.format(mode_c, "xx"))
+                Sim_rash.charge_conductivity_vs_Ef((0, 0), Gamma, **opts)
+                print(mssg.format(mode_c, "yy"))
+                Sim_rash.charge_conductivity_vs_Ef((1, 1), Gamma, **opts)
