@@ -45,9 +45,9 @@ if mode == "s":
 elif mode == "c":
     for Gamma in Gamma_arr:
         for mode_c in mode_c_list:
-            print("calculating charge conductivity: {}-xx".forma(mode_c))
-            Sim_rash.charge_conductivity_vs_Ef(
-                (0, 0), Gamma, nk=nk, nE=nE, mode=mode_c, nproc=nproc)
-            print("calculating charge conductivity: {}-yy".forma(mode_c))
-            Sim_rash.charge_conductivity_vs_Ef(
-                (1, 1), Gamma, nk=nk, nE=nE, mode=mode_c, nproc=nproc)
+            mssg = "Calculating charge conductivity: {}-{}"
+            opts = {"nk": nk, "nE": nE, "mode": mode_c, "nproc": nproc}
+            print(mssg.forma(mode_c, "xx"))
+            Sim_rash.charge_conductivity_vs_Ef((0, 0), Gamma, **opts)
+            print(mssg.forma(mode_c, "yy"))
+            Sim_rash.charge_conductivity_vs_Ef((1, 1), Gamma, **opts)
